@@ -1,2 +1,0 @@
-function p = transitionProb(from,to,action)
-end
