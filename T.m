@@ -19,8 +19,8 @@ function p = T(s0, a0, s1)
     neighbor(4) = (s0 - n) == s1 & col > 1;
     
     prob = zeros(4,1);
-    prob(:) = fail / 4;
-    prob(a0) = prob(a0) + success;
+    prob(:) = fail / 3;
+    prob(a0) = success;
     
     edge = zeros(4,1);
     edge(1) = row == 1;
