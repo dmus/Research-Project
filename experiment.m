@@ -1,41 +1,40 @@
 % Availabe in functions
-global n m n_macrocells n_states n_actions;
+global n m num_macrocells num_states num_actions;
 
-n = 16; % nxn gridworld
+addpath('MDPtoolbox');
+
+n = 8; % nxn gridworld
 m = 2; % mxm macrocells
 
-success = 0.7;
-fail = 1 - success;
 discount = 0.99;
+epsilon = 0.01;
 
-n_macrocells = (n / m) ^ 2;
-n_states = n ^ 2;
-n_actions = 4; % North, East, South, West
-
-
+num_macrocells = (n / m) ^ 2;
+num_states = n ^ 2;
+num_actions = 4; % North, East, South, West
 
 num_demonstrations = 10;
-num_steps = 1000;
+num_steps = 100;
 Demos = zeros(num_demonstrations, num_steps);
-Expectations = zeros(num_demonstrations, n_macrocells);
+Expectations = zeros(num_demonstrations, num_macrocells);
 
 % Initial state distribution
-D = rand(n_states, 1);
+D = rand(num_states, 1);
 D = D ./ sum(D);
 
 % True reward function
-mask = rand(n_macrocells, 1) > 0.9;
-r = rand(n_macrocells,1) .* mask;
+mask = rand(num_macrocells, 1) > 0.9;
+r = rand(num_macrocells,1) .* mask;
 r = r ./ sum(r);
 R = kron(reshape(r,(n/m),(n/m)), ones(m,m));
-R = repmat(R(:), 1, n_actions); 
+R = repmat(R(:), 1, num_actions); 
 
 % Transition probabilities
-P = zeros(n_states,n_states,n_actions);
+P = zeros(num_states,num_states,num_actions);
 
-for from = 1:n_states
-    for to = 1:n_states
-        for a = 1:n_actions
+for from = 1:num_states
+    for to = 1:num_states
+        for a = 1:num_actions
             P(from,to,a) = T(from,a,to);
         end
     end
@@ -55,15 +54,14 @@ end
 
 % Empirical estimate
 mu_expert = mean(Expectations)';
-epsilon = 0.01;
 
-mu = zeros(n_macrocells, 0);
-mu_est = zeros(n_macrocells, 0);
-w = zeros(n_macrocells, 0);
+mu = zeros(num_macrocells, 0);
+mu_est = zeros(num_macrocells, 0);
+w = zeros(num_macrocells, 0);
 t = zeros(0,1);
 
 % 1.
-Pol{1} = ceil(rand(n_states,1) * 4);
+Pol{1} = ceil(rand(num_states,1) * 4);
 mu(:,1) = feature_expectations(P, discount, D, Pol{1}, num_steps);
 i = 2;
 
@@ -80,7 +78,7 @@ while 1
     w(:,i) = mu_expert - mu_est(:,i - 1);
     t(i) = norm(mu_expert - mu_est(:,i - 1), 2);
 
-    fprintf('t(i) = %6.2f\n', t(i));
+    fprintf('t(%d) = %6.4f\n', i, t(i));
 
     % 3.
     if t(i) <= epsilon
@@ -92,7 +90,7 @@ while 1
 
     fprintf('Searching for policy...\n');
     R = kron(reshape(w(:,i),(n/m),(n/m)), ones(m,m));
-    R = repmat(R(:), 1, n_actions);
+    R = repmat(R(:), 1, num_actions);
     [V, Pol{i}, iter, cpu_time] = mdp_value_iteration (P, R, discount);
 
 
