@@ -3,7 +3,7 @@ global n m num_macrocells num_states num_actions;
 
 addpath('MDPtoolbox');
 
-n = 32; % nxn gridworld
+n = 16; % nxn gridworld
 m = 4; % mxm macrocells
 
 discount = 0.99;
@@ -13,7 +13,7 @@ num_macrocells = (n / m) ^ 2;
 num_states = n ^ 2;
 num_actions = 4; % North, East, South, West
 
-num_samples = 50;
+num_samples = 10;
 num_steps = 100;
 
 Expectations = zeros(num_samples, num_macrocells);

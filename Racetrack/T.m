@@ -1,39 +1,20 @@
 function p = T(s0, a0, s1)
 %T Summary of this function goes here
 %   Detailed explanation goes here
-    global n;
-
-    success = 0.7;
-    fail = 1 - 0.7;
     
-    col = ceil(s0 / n); 
-	row = mod(s0,n);
-    if row == 0
-        row = n;
-    end
+    % racetrack (a), 1 means road, 0 = off-road
+    Racetrack = ones(12,35);
+    Racetrack(1:5, 1:32) = 0;
+    Racetrack(10, 1:4) = 0;
+    Racetrack(11, 1:8) = 0;
+    Racetrack(12, 1:12) = 0;
     
-    neighbor = zeros(4,1);
-    neighbor(1) = (s0 - 1) == s1 & row > 1;
-    neighbor(2) = (s0 + n) == s1 & col < n;
-    neighbor(3) = (s0 + 1) == s1 & row < n;
-    neighbor(4) = (s0 - n) == s1 & col > 1;
+    % actions example
+    s = [6;1;0;0];
+    a = [0;1];
     
-    prob = zeros(4,1);
-    prob(:) = fail / 3;
-    prob(a0) = success;
     
-    edge = zeros(4,1);
-    edge(1) = row == 1;
-    edge(2) = col == n;
-    edge(3) = row == n;
-    edge(4) = col == 1;
-    
-    if s0 == s1
-        p = prob' * edge;
-    elseif sum(neighbor) == 1
-        p = prob' * neighbor;
-    else
-        p = 0;
-    end
+    s(1:2) = s(1:2) + s(3:4);
+    s(3:4) = s(3:4) + a;
 end
 
