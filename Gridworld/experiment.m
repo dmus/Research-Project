@@ -1,4 +1,8 @@
-% Availabe in functions
+%% Gridworld experiment
+% Apprenticeship learning experiment in a simple gridworld
+
+%%
+% Make parameters availabe in functions
 global n m num_macrocells num_states num_actions;
 
 addpath('MDPtoolbox');
@@ -13,14 +17,11 @@ num_macrocells = (n / m) ^ 2;
 num_states = n ^ 2;
 num_actions = 4; % North, East, South, West
 
-num_samples = 10;
-num_steps = 100;
+num_samples = 10; % Number of samples to take to approximate feature expectations
+num_steps = 100; % Number of steps for each sample
 
-Expectations = zeros(num_samples, num_macrocells);
-
-% Initial state distribution
-D = rand(num_states, 1);
-D = D ./ sum(D);
+% Initial uniform state distribution
+D = ones(num_states, 1) / num_states;
 
 % True reward function
 mask = rand(num_macrocells, 1) > 0.9;
@@ -72,6 +73,7 @@ mu_est = zeros(num_macrocells, 0);
 w = zeros(num_macrocells, 0);
 t = zeros(0,1);
 
+% Projection algorithm
 % 1.
 Pol{1} = ceil(rand(num_states,1) * 4);
 mu(:,1) = feature_expectations(P, discount, D, Pol{1}, num_samples, num_steps);
@@ -104,7 +106,6 @@ while 1
     R = kron(reshape(w(:,i),(n/m),(n/m)), ones(m,m));
     R = repmat(R(:), 1, num_actions); 
     [V, Pol{i}, iter, cpu_time] = mdp_value_iteration (P, R, discount);
-
 
     % 5.
     mu(:,i) = feature_expectations(P, discount, D, Pol{i}, num_samples, num_steps);

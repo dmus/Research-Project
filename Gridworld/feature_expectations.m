@@ -1,6 +1,7 @@
 function mu = feature_expectations(P, discount, D, policy, num_samples, num_steps)
-%FEATURE_EXPECTATIONS Summary of this function goes here
-%   Detailed explanation goes here
+%FEATURE_EXPECTATIONS Expected features
+%   FEATURE_EXPECTATIONS produces the expected accumulated feature counts
+%   if the given POLICY is followed.
     global num_macrocells;
 
     Mu = zeros(num_samples, num_macrocells);

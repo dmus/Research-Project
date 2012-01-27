@@ -1,6 +1,6 @@
 function f = phi(state)
-%PHI Summary of this function goes here
-%   Detailed explanation goes here
+%PHI Features for a state.
+%   PHI(X) returns a feature vector for state x.
     global n m num_macrocells;
 
     f = zeros(num_macrocells, 1);

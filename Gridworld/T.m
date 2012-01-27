@@ -1,6 +1,7 @@
 function p = T(s0, a0, s1)
-%T Summary of this function goes here
-%   Detailed explanation goes here
+%T Transition probability.
+%   T returns the probability that the agent will land in state S1 if in 
+%   state S0 action A0 is taken.
     global n;
 
     success = 0.7;
