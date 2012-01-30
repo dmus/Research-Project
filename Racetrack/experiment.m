@@ -3,55 +3,118 @@
 
 %%
 % Make parameters availabe in functions
-global n m num_macrocells num_states num_actions;
+global Racetrack num_states num_actions size_statespace num_features;
 
 addpath('MDPtoolbox');
 
+% racetrack (a), 1 means road, 0 = off-road
+Racetrack = ones(12,35);
+Racetrack(1:5, 1:32) = 0;
+Racetrack(10, 1:4) = 0;
+Racetrack(11, 1:8) = 0;
+Racetrack(12, 1:12) = 0;
+
 discount = 0.99;
 epsilon = 0.1;
+num_features = 3;
 
-num_states = 5900;
-num_actions = 25;
+% Number of rows, columns and number of possibilities for horizontal and
+% vertical speed
+rows = size(Racetrack,1);
+columns = size(Racetrack,2);
+speeds_ver = 5;
+speeds_hor = 5;
+size_statespace = [rows columns speeds_ver speeds_hor];
+num_states = rows * columns * speeds_ver * speeds_hor;
+Actions = [0 0; 1 0; -1 0; 0 1; 0 -1]';
+
+min_state = [1; 1; -2; -2];
+max_state = [rows; columns; 2; 2];
+
+num_actions = size(Actions,2);
 
 num_samples = 10; % Number of samples to take to approximate feature expectations
 num_steps = 100; % Number of steps for each sample
 
-% Initial uniform state distribution
-D = ones(num_states, 1) / num_states;
+% Initial state distribution
+D = zeros(rows, columns, speeds_ver, speeds_hor);
+D(6:9, 1, 3, 3) = 0.25;
 
 % True reward function
-mask = rand(num_macrocells, 1) > 0.9;
-r = rand(num_macrocells,1) .* mask;
-r = r ./ sum(r);
-R = kron(reshape(r,(n/m),(n/m)), ones(m,m));
-R = repmat(R(:), 1, num_actions); 
+R = zeros(12,35,5,5);
+for row = 1:rows
+    for column = 1:columns
+        for speed_ver = 1:speeds_ver
+            for speed_hor = 1:speeds_hor
+                s = [row;column;speed_ver;speed_hor];
+                % Action doesn't matter
+                R(row,column,speed_ver,speed_hor) = reward(s, 1);
+            end
+        end
+    end
+end
+
+R = repmat(R(:), 1, num_actions);
 
 % Transition probabilities
-for a = 1:num_actions
-    P{a} = sparse([],[],[],num_states,num_states,num_states * (num_actions + 1));
-    for from = 1:num_states
+filter = [0;0;3;3];
+for i = 1:num_actions
+    a = Actions(:,i);
+    P{i} = sparse([],[],[],num_states,num_states,num_states * 6);
+    
+    for s0_ind = 1:num_states
+        [row, column, speed_ver, speed_hor] = ind2sub(size(D), s0_ind);
+        s0 = [row;column;speed_ver;speed_hor];
+        s0 = s0 - filter;
         
-        P{a}(from, from) = T(from,a,from);
+        % Check if valid state
+        if ~Racetrack(s0(1), s0(2))
+            continue;
+        end
         
-        if from > n && from <= num_states - n 
-            P{a}(from, from - 1) = T(from,a,from - 1);
-            P{a}(from, from + n) = T(from,a,from + n);
-            P{a}(from, from + 1) = T(from,a,from + 1);
-            P{a}(from, from - n) = T(from,a,from - n);
-        elseif from == 1 % Top-left corner
-            P{a}(from, from + n) = T(from,a,from + n);
-            P{a}(from, from + 1) = T(from,a,from + 1);
-        elseif from <= n % Left column
-            P{a}(from, from - 1) = T(from,a,from - 1);
-            P{a}(from, from + n) = T(from,a,from + n);
-            P{a}(from, from + 1) = T(from,a,from + 1);
-        elseif from == num_states % Bottom-right corner
-            P{a}(from, from - 1) = T(from,a,from - 1);
-            P{a}(from, from - n) = T(from,a,from - n);
-        elseif from > num_states - n % Right column
-            P{a}(from, from - 1) = T(from,a,from - 1);
-            P{a}(from, from + 1) = T(from,a,from + 1);
-            P{a}(from, from - n) = T(from,a,from - n);
+        % Same state
+        s1 = s0;
+        temp = s1 + filter;
+        P{i}(s0_ind, sub2ind(size(D), temp(1), temp(2), temp(3), temp(4))) = T(s0, a, s1);
+                    
+        % Same speed
+        s1 = s0;
+        s1(1:2) = s0(1:2) + s0(3:4);
+        if s1 >= min_state & s1 <= max_state
+            temp = s1 + filter;
+            P{i}(s0_ind, sub2ind(size(D), temp(1), temp(2), temp(3), temp(4))) = T(s0, a, s1);
+        end
+           
+        % Speed reset
+        s1 = s0;
+        s1(3:4) = 0;
+        if s1 >= min_state & s1 <= max_state
+            temp = s1 + filter;
+            P{i}(s0_ind, sub2ind(size(D), temp(1), temp(2), temp(3), temp(4))) = T(s0, a, s1);
+        end
+        
+        s1 = s0;
+        s1(1:2) = s0(1:2) + s0(3:4);
+        s1(3:4) = 0;
+        if s1 >= min_state & s1 <= max_state
+            temp = s1 + filter;
+            P{i}(s0_ind, sub2ind(size(D), temp(1), temp(2), temp(3), temp(4))) = T(s0, a, s1);
+        end
+        
+        % Action successful
+        s1 = s0;
+        s1(3:4) = s0(3:4) + a;
+        if s1 >= min_state & s1 <= max_state
+            temp = s1 + filter;
+            P{i}(s0_ind, sub2ind(size(D), temp(1), temp(2), temp(3), temp(4))) = T(s0, a, s1);
+        end
+        
+        s1 = s0;
+        s1(1:2) = s0(1:2) + s0(3:4);
+        s1(3:4) = s0(3:4) + a;
+        if s1 >= min_state & s1 <= max_state
+            temp = s1 + filter;
+            P{i}(s0_ind, sub2ind(size(D), temp(1), temp(2), temp(3), temp(4))) = T(s0, a, s1);
         end
     end
 end

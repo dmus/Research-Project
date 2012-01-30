@@ -2,9 +2,8 @@ function mu = feature_expectations(P, discount, D, policy, num_samples, num_step
 %FEATURE_EXPECTATIONS Expected features.
 %   FEATURE_EXPECTATIONS produces the expected accumulated feature counts
 %   if the given POLICY is followed.
-    global num_macrocells;
-
-    Mu = zeros(num_samples, num_macrocells);
+    global num_features;
+    Mu = zeros(num_samples, num_features);
 
     for i = 1:num_samples
         trajectory = zeros(num_steps,1);
@@ -22,6 +21,10 @@ function mu = feature_expectations(P, discount, D, policy, num_samples, num_step
             
             s = find(cumprob > r, 1);
 
+            if size(s) == [1 0]
+                a = 'hoial';
+            end
+            
             trajectory(t) = s;
             Mu(i,:) = Mu(i,:) + discount ^ (t-1) * phi(s)';
         end
