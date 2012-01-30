@@ -34,7 +34,7 @@ max_state = [rows; columns; 2; 2];
 num_actions = size(Actions,2);
 
 num_samples = 10; % Number of samples to take to approximate feature expectations
-num_steps = 100; % Number of steps for each sample
+num_steps = 30; % Number of steps for each sample
 
 % Initial state distribution
 D = zeros(rows, columns, speeds_ver, speeds_hor);
@@ -127,14 +127,14 @@ fprintf('Optimal policy found...\n');
 fprintf('Sampling demonstration...\n');
 mu_expert = feature_expectations(P, discount, D, policy, num_samples, num_steps);
 
-mu = zeros(num_macrocells, 0);
-mu_est = zeros(num_macrocells, 0);
-w = zeros(num_macrocells, 0);
+mu = zeros(num_features, 0);
+mu_est = zeros(num_features, 0);
+w = zeros(num_features, 0);
 t = zeros(0,1);
 
 % Projection algorithm
 % 1.
-Pol{1} = ceil(rand(num_states,1) * 4);
+Pol{1} = ceil(rand(num_states,1) * num_actions);
 mu(:,1) = feature_expectations(P, discount, D, Pol{1}, num_samples, num_steps);
 i = 2;
 
@@ -162,8 +162,10 @@ while 1
 
     % 4.
 
-    R = kron(reshape(w(:,i),(n/m),(n/m)), ones(m,m));
-    R = repmat(R(:), 1, num_actions); 
+    for j = 1:num_states
+        R(j,:) = w(:,i)' * phi(j);
+    end
+     
     [V, Pol{i}, iter, cpu_time] = mdp_value_iteration (P, R, discount);
 
     % 5.

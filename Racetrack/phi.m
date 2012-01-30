@@ -11,6 +11,6 @@ function f = phi(ind)
 
     f(1) = s(1) == 1;
     f(2) = ~Racetrack(s(1), s(2));
-    f(3) = max(s(3:4) / 2);
+    f(3) = max(abs(s(3:4)) / 2);
 end
 
