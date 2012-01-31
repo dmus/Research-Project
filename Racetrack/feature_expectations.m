@@ -11,6 +11,7 @@ function mu = feature_expectations(P, discount, D, policy, num_samples, num_step
         cumprob = cumsum(D);
         r = rand();
         s = find(cumprob > r, 1);
+        
         Mu(i,:) = phi(s)';
 
         for t = 2:num_steps
