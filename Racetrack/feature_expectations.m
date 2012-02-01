@@ -6,8 +6,7 @@ function mu = feature_expectations(P, discount, D, policy, num_samples, num_step
     Mu = zeros(num_samples, num_features);
 
     for i = 1:num_samples
-        trajectory = zeros(num_steps,2);
-
+        clear trajectory;
         cumprob = cumsum(D);
         r = rand();
         s = find(cumprob > r, 1);

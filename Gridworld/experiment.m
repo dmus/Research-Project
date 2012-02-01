@@ -121,11 +121,11 @@ distances = sqrt(sum(distances .^ 2));
 fprintf('Distance: %6.4f\n\n', min_distance);
 
 fprintf('Comparison between performance of expert and apprentice on found reward function:\n');
-fprintf('Apprentice: %6.4f\n', w(:,selected)' * mu(:, selected));
-fprintf('Expert: %6.4f\n\n', w(:,selected)' * mu_expert);
+fprintf('V(Apprentice): %6.4f\n', w(:,selected)' * mu(:, selected));
+fprintf('V(Expert): %6.4f\n\n', w(:,selected)' * mu_expert);
 
 fprintf('Comparison between performance of expert and apprentice on true reward function:\n');
-fprintf('Apprentice: %6.4f\n', r' * mu(:, selected));
-fprintf('Expert: %6.4f\n\n', r' * mu_expert);
+fprintf('V(Apprentice): %6.4f\n', r' * mu(:, selected));
+fprintf('V(Expert): %6.4f\n\n', r' * mu_expert);
 
 fprintf('Done\n');

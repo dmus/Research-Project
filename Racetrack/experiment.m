@@ -8,21 +8,21 @@ global Racetrack num_states num_actions size_statespace num_features filter;
 addpath('MDPtoolbox');
 
 % racetrack (a), 1 means road, 0 = off-road
-% Racetrack = ones(12,35);
-% Racetrack(1:5, 1:32) = 0;
-% Racetrack(10, 1:4) = 0;
-% Racetrack(11, 1:8) = 0;
-% Racetrack(12, 1:12) = 0;
+Racetrack = ones(12,35);
+Racetrack(1:5, 1:32) = 0;
+Racetrack(10, 1:4) = 0;
+Racetrack(11, 1:8) = 0;
+Racetrack(12, 1:12) = 0;
 
 % racetrack (b), 1 means road, 0 = off-road
-Racetrack = ones(9,33);
-Racetrack(4:6,4:30) = 0;
-Corner = zeros(2,2);
-Corner(2,2) = 1;
-Racetrack(1:2,1:2) = Corner;
-Racetrack(8:9,1:2) = rot90(Corner,1);
-Racetrack(8:9,32:33) = rot90(Corner,2);
-Racetrack(1:2,32:33) = rot90(Corner,3);
+% Racetrack = ones(9,33);
+% Racetrack(4:6,4:30) = 0;
+% Corner = zeros(2,2);
+% Corner(2,2) = 1;
+% Racetrack(1:2,1:2) = Corner;
+% Racetrack(8:9,1:2) = rot90(Corner,1);
+% Racetrack(8:9,32:33) = rot90(Corner,2);
+% Racetrack(1:2,32:33) = rot90(Corner,3);
 
 discount = 0.99;
 epsilon = 0.01;
@@ -47,14 +47,14 @@ num_samples = 10; % Number of samples to take to approximate feature expectation
 num_steps = 60; % Number of steps for each sample
 
 % Initial state distribution for racetrack (a)
-% D = zeros(rows, columns, speeds_ver, speeds_hor);
-% D(6:9, 1, 3, 3) = 0.25;
+D = zeros(rows, columns, speeds_ver, speeds_hor);
+D(6:9, 1, 3, 3) = 0.25;
 
 % Initial state distribution for racetrack (b)
-D = zeros(rows, columns, speeds_ver, speeds_hor);
-Temp = D(:,:,3,3);
-Temp(Racetrack > 0) = 1 / sum(Racetrack(:));
-D(:, :, 3, 3) = Racetrack;
+% D = zeros(rows, columns, speeds_ver, speeds_hor);
+% Temp = D(:,:,3,3);
+% Temp(Racetrack > 0) = 1 / sum(Racetrack(:));
+% D(:, :, 3, 3) = Racetrack;
 
 % True reward function
 R = zeros(rows,columns,speeds_ver,speeds_hor);
@@ -172,7 +172,7 @@ while 1
 
     % 3.
     if t(i) <= epsilon
-        fprintf('Terminate...');
+        fprintf('Terminate...\n\n');
         break;
     end
 
@@ -190,5 +190,15 @@ while 1
     % 6.
     i = i + 1;
 end
+
+fprintf('Selecting feature expectations closest to expert...\n');
+distances = bsxfun(@minus, mu, mu_expert);
+distances = sqrt(sum(distances .^ 2));
+[min_distance, selected] = min(distances);
+fprintf('Distance: %6.4f\n\n', min_distance);
+
+fprintf('Comparison between performance of expert and apprentice on found reward function:\n');
+fprintf('V(Apprentice): %6.4f\n', w(:,selected)' * mu(:, selected));
+fprintf('V(Expert): %6.4f\n\n', w(:,selected)' * mu_expert);
 
 fprintf('Done\n');
