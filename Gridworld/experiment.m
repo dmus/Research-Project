@@ -11,7 +11,7 @@ n = 32; % nxn gridworld
 m = 4; % mxm macrocells
 
 discount = 0.99;
-epsilon = 0.1;
+epsilon = 1;
 
 num_macrocells = (n / m) ^ 2;
 num_states = n ^ 2;
@@ -97,7 +97,7 @@ while 1
 
     % 3.
     if t(i) <= epsilon
-        fprintf('Terminate...');
+        fprintf('Terminate...\n\n');
         break;
     end
 
@@ -113,5 +113,19 @@ while 1
     % 6.
     i = i + 1;
 end
+
+fprintf('Selecting feature expectations closest to expert...\n');
+distances = bsxfun(@minus, mu, mu_expert);
+distances = sqrt(sum(distances .^ 2));
+[min_distance, selected] = min(distances);
+fprintf('Distance: %6.4f\n\n', min_distance);
+
+fprintf('Comparison between performance of expert and apprentice on found reward function:\n');
+fprintf('Apprentice: %6.4f\n', w(:,selected)' * mu(:, selected));
+fprintf('Expert: %6.4f\n\n', w(:,selected)' * mu_expert);
+
+fprintf('Comparison between performance of expert and apprentice on true reward function:\n');
+fprintf('Apprentice: %6.4f\n', r' * mu(:, selected));
+fprintf('Expert: %6.4f\n\n', r' * mu_expert);
 
 fprintf('Done\n');
