@@ -11,9 +11,9 @@ function f = phi(ind)
     f = zeros(num_features,1);
 
     f(1) = finished(ind);
-    f(2) = offroad(s);
+    f(2) = ~offroad(s);
     f(3) = max(abs(s(3:4)) / 2);
-    
+    f(3) = -1 * f(3) + 1;
     % Feature (4) for driving in opposite direction, only for track (b)
     if size(Racetrack,1) == 9
         if s(1) <= 3 && s(2) >= 3 && s(2) <= 31 && s(4) > 0
@@ -36,5 +36,7 @@ function f = phi(ind)
             return;
         end
     end
+    
+    f(4) = ~f(4);
 end
 
