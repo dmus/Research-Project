@@ -5,3 +5,7 @@ All code for the gridworld experiment is in this folder.
 - Racetrack
 
 This folder contains the racetracks and code for racetrack experiments.
+
+- Demonstrations
+
+Folder containing state-action trajectories of experts in TORCS.
