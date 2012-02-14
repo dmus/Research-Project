@@ -4,11 +4,40 @@ load('track01_mrracer.mat');
 A = Actions(:,1) + -1 * Actions(:,2);
 A(:,2) = Actions(:,5);
 
-% States: distFromStart, trackPos, angle, speedX, speedY
-S = States(:, [4, 69, 1, 47, 48]);
+% Remove states and actions before start signal
+States = States(States(:,2) > 0,:);
+Actions = Actions(States(:,2) > 0,:);
 
-X = ones(size(S,1) - 1, 1);
-X = [X S(1:end-1,:) A(1:end-1,:)];
-y = S(2:end,5);
+% Separate into different trials for each lap
+% First, find starting points for each lap
+ind = find(States(:,2) < 0.1);
+starts = [];
+for i = 1:length(ind)
+    j = ind(i);
+    if j == 1 || States(j - 1, 2) > States(j, 2)
+        starts = [starts j];
+    end
+end
 
-theta = pinv(X' * X) * X' * y;
+% Now make the trails
+for i = 1:length(starts)
+    stop = size(States,1);
+    if i < length(starts)
+        stop = starts(i + 1) - 1;
+    end
+    
+    Trials{i}.S = States(starts(i):stop,:);
+    Trials{i}.A = Actions(starts(i):stop,:);
+end
+
+model = estimateDynamics(Trials);
+
+
+cost = computeCost(X,y(:,1),[model.A(1,:)'; model.B(1,:)']);
+
+% Sample 1000 states from expert's trajectory
+ind = ceil(rand(1000, 1) * size(States,1));
+Samples = States(ind, [4 69 1 47 48]);
+
+% Approximate value function
+theta = findPolicy(model, Samples);
