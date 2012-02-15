@@ -6,6 +6,10 @@ All code for the gridworld experiment is in this folder.
 
 This folder contains the racetracks and code for racetrack experiments.
 
-- Demonstrations
+- TORCS-Dynamics
 
-Folder containing state-action trajectories of experts in TORCS.
+Contains state-action trajectories of experts and trials in TORCS.
+
+- TORCS-Controller
+
+The actual controller for the TORCS simulator (Java implementation).

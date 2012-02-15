@@ -1,6 +1,8 @@
 function theta = findPolicy(model, States)
-%FINDPOLICY Summary of this function goes here
-%   Detailed explanation goes here
+%FINDPOLICY Approximate value function
+%   THETA = FINDPOLICY(MODEL, STATES) performs fitted value iteration to
+%   find an approximation for the value function V as an linear approximation 
+%   of the states: V(s) = theta' * s . 
 
     discount = 0.99;
 

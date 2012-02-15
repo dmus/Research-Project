@@ -14,10 +14,16 @@ public class Schumacher extends Controller {
     protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
     
+    protected float[][] actions = new float[15][2];
+    
+    public float getValueForNextState(SensorModel s, float[][] a) {
+    	return 0.0f;
+    }
+    
     public Action control(SensorModel sensorModel) {
         Action action = new Action ();
         
-        
+        /*
         if (sensorModel.getSpeed () < targetSpeed) {
             action.accelerate = 1;
         }
@@ -27,7 +33,16 @@ public class Schumacher extends Controller {
         else {
             action.steering = 0.1;
         }
+        */
         
+        float velocity = 0;
+        float steering = 0;
+        
+        
+        
+        action.accelerate = Math.max(velocity, 0.0);
+        action.brake = Math.min(velocity, 0.0);
+        action.steering = steering;
         
         gearBehaviour.execute(sensorModel, action);
         clutchBehaviour.execute(sensorModel, action);

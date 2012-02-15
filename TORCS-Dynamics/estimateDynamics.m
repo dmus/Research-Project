@@ -4,7 +4,7 @@ function model = estimateDynamics(Trials)
 %   estimate system dynamics.
 
     % Create training set
-    X = zeros(0, 7);
+    X = zeros(0,7);
     y = zeros(0,5);
 
     % Indexes for relevant state features:
