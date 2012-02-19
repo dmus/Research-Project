@@ -12,37 +12,9 @@ function [model, Trials] = updateDynamics(path)
             convert(file);
         end
         
-        % Load state-action trajectories
-        load(strcat(file, '.mat'));
-        
-        % Remove states and actions before start signal
-        States = States(States(:,2) > 0,:);
-        Actions = Actions(States(:,2) > 0,:);
-
-        % Separate into different trials for each lap
-        % First, find starting points for each lap
-        ind = find(States(:,2) < 0.1);
-        starts = [];
-        for i = 1:length(ind)
-            j = ind(i);
-            if j == 1 || States(j - 1, 2) > States(j, 2)
-                starts = [starts j];
-            end
-        end
-
-        % Now make the trails
-        for i = 1:length(starts)
-            stop = size(States,1);
-            if i < length(starts)
-                stop = starts(i + 1) - 1;
-            end
-
-            Trials{num_trials + 1}.S = States(starts(i):stop,:);
-            Trials{num_trials + 1}.A = Actions(starts(i):stop,:);
-            
-            num_trials = num_trials + 1;
-        end
-        
+        % Load state-action trajectories and convert to trials
+        Temp = getTrials(strcat(file, '.mat'));
+        Trials(num_trials + 1: num_trials + numel(Temp)) = Temp;
     end
     
     model = estimateDynamics(Trials);

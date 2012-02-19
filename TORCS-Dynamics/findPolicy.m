@@ -1,23 +1,20 @@
-function theta = findPolicy(model, States)
+function theta = findPolicy(model, States, Actions)
 %FINDPOLICY Approximate value function
 %   THETA = FINDPOLICY(MODEL, STATES) performs fitted value iteration to
 %   find an approximation for the value function V as an linear approximation 
 %   of the states: V(s) = theta' * s . 
 
-    discount = 0.99;
+    discount = 0.9;
 
     theta = zeros(size(States,2), 1);
-    velocities = [0.6 0.3 0 -0.3 -0.6];
-    steerings = [1 0 -1];
     
-    [x1,x2] = ndgrid(velocities, steerings);
-    Actions = [x1(:) x2(:)];
     
     % Number of state samples
     m = size(States,1);
     num_actions = size(Actions,1);
     
-    for iter = 1:1000
+    for iter = 1:20
+        fprintf('iteration %d\n', iter);
         y = zeros(m, 1);
         for i = 1:m
             state = States(i,:)';
@@ -31,7 +28,7 @@ function theta = findPolicy(model, States)
             y(i) = max(q);
         end
         
-        theta = linearRegression(States, y);
+        theta = linearRegression(States, y)
     end
 end
 

@@ -55,11 +55,7 @@ public class Schumacher extends Controller {
     		String[] temp = data.get(++count).split(",");
     		matrix[count] = new double[temp.length];
     		for(int i = 0; i < temp.length; i++) {
-    			System.out.println(temp[i]);
-    			System.out.println(Double.valueOf(temp[i]));
-    			
     			matrix[count][i] = Double.valueOf(temp[i]);
-    			System.out.println("done");
     		}
     	}
     	
@@ -68,6 +64,11 @@ public class Schumacher extends Controller {
     
     public Action control(SensorModel sensorModel) {
         Action action = new Action ();
+        
+        if (Math.abs(sensorModel.getTrackPosition()) > 1) {
+        	action.restartRace = true;
+        	return action;
+        }
         
         /*
         if (sensorModel.getSpeed () < targetSpeed) {
@@ -82,11 +83,13 @@ public class Schumacher extends Controller {
         */
         
         double[] dataS = {
-        		sensorModel.getDistanceFromStartLine(),
-        		sensorModel.getTrackPosition(),
-        		sensorModel.getAngleToTrackAxis(),
-        		sensorModel.getSpeed(),
-        		sensorModel.getLateralSpeed()
+        		sensorModel.getDistanceFromStartLine() / 2057.56,
+        		sensorModel.getTrackPosition() > 0 ? sensorModel.getTrackPosition() : 0,
+        		sensorModel.getTrackPosition() < 0 ? sensorModel.getTrackPosition() * -1 : 0,
+        		sensorModel.getAngleToTrackAxis() > 0 ? sensorModel.getAngleToTrackAxis() : 0,
+        		sensorModel.getAngleToTrackAxis() < 0 ? sensorModel.getAngleToTrackAxis() * -1 : 0,
+        		(sensorModel.getSpeed() * 1000 / 3600) / 2057.56,
+        		(sensorModel.getLateralSpeed() * 1000 / 3600) / (sensorModel.getTrackEdgeSensors()[0] + sensorModel.getTrackEdgeSensors()[18])
         };
         
         RealVector s = new ArrayRealVector(dataS);
@@ -110,8 +113,8 @@ public class Schumacher extends Controller {
         
         RealVector selectedAction = actions.getRowVector(maxIndex);
         
-        double velocity = selectedAction.getEntry(1);
-        double steering = selectedAction.getEntry(0);
+        double velocity = selectedAction.getEntry(0);
+        double steering = selectedAction.getEntry(1);
         
         
         
