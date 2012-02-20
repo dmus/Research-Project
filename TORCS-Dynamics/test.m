@@ -1,5 +1,5 @@
 % Discretize action space
-velocities = [0.5 0.25 0 -0.5 -0.25];
+velocities = [0.5 0 -0.5];
 steerings = [0.2 0 -0.2];
     
 [x1,x2] = ndgrid(velocities, steerings);

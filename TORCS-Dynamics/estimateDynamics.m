@@ -14,8 +14,6 @@ function model = estimateDynamics(Trials)
         S = Trials{i}.S;
         A = Trials{i}.A;
         
-        % Include distFromStart, trackPos, angle, speedX, speedY, velocity
-        % control and steering control
         X = [X; S(1:end-1, :) A(1:end-1, :)];
         y = [y; S(2:end, :)];
     end
