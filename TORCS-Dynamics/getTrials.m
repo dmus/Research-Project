@@ -10,16 +10,16 @@ function Trials = getTrials(filename)
 
     % Separate into different trials for each lap
     % First, find starting points for each lap
-    ind = find(States(:,2) < 0.1);
-    starts = [];
+    ind = find(States(:,4) < 2);
+    starts = [1];
     for i = 1:length(ind)
         j = ind(i);
-        if j == 1 || States(j - 1, 2) > States(j, 2)
+        if States(j - 1, 4) > States(j, 4)
             starts = [starts j];
         end
     end
 
-    num_features = 7;
+    num_features = 5;
     
     % Now make the trails
     for i = 1:length(starts)
@@ -34,12 +34,14 @@ function Trials = getTrials(filename)
         % Feature selection for representing states
         Sn = zeros(size(S,1), num_features);
         Sn(:,1) = S(:,4) / 2057.56;
-        Sn(S(:,69) > 0,2) = S(S(:,69) > 0,69); 
-        Sn(S(:,69) < 0,3) = S(S(:,69) < 0,69) * -1;
-        Sn(S(:,1) > 0,4) = S(S(:,1) > 0,1);
-        Sn(S(:,1) < 0,5) = S(S(:,1) < 0,1) * -1;
-        Sn(:,6) = (S(:,47) * 1000 / 3600) / 2057.56;
-        Sn(:,7) = (S(:,48) * 1000 / 3600) ./ (S(:,50) + S(:,68));
+        Sn(:,2) = S(:,69);
+        %Sn(S(:,69) > 0,2) = S(S(:,69) > 0,69); 
+        %Sn(S(:,69) < 0,3) = S(S(:,69) < 0,69) * -1;
+        Sn(:,3) = S(:,1) / pi;
+        %Sn(S(:,1) > 0,4) = S(S(:,1) > 0,1);
+        %Sn(S(:,1) < 0,5) = S(S(:,1) < 0,1) * -1;
+        Sn(:,4) = (S(:,47) * 1000 / 3600) / 2057.56;
+        Sn(:,5) = (S(:,48) * 1000 / 3600) ./ (S(:,50) + S(:,68));
         
         % Feature selection for representing actions
         An = zeros(size(A,1), 2);
