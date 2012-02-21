@@ -15,6 +15,7 @@ function [model, Trials] = updateDynamics(path)
         % Load state-action trajectories and convert to trials
         Temp = getTrials(strcat(file, '.mat'));
         Trials(num_trials + 1: num_trials + numel(Temp)) = Temp;
+        num_trials = numel(Trials);
     end
     
     model = estimateDynamics(Trials);

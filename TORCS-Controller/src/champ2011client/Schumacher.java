@@ -20,13 +20,15 @@ import champ2011client.behaviour.*;
  */
 public class Schumacher extends Controller {
 
-    final double targetSpeed = 95;
+    final double targetSpeed = 30;
 
     protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
     
     protected RealMatrix a, b, actions;
     protected RealVector theta;
+    
+    protected double previousAngle = 0;
     
     public Schumacher() throws FileNotFoundException {
     	double[][] dataA = readMatrixFromCsv("../TORCS-Dynamics/A.csv");
@@ -84,13 +86,18 @@ public class Schumacher extends Controller {
         
         double[] dataS = {
         		sensorModel.getDistanceFromStartLine() / 2057.56,
-        		sensorModel.getTrackPosition() > 0 ? sensorModel.getTrackPosition() : 0,
-        		sensorModel.getTrackPosition() < 0 ? sensorModel.getTrackPosition() * -1 : 0,
-        		sensorModel.getAngleToTrackAxis() > 0 ? sensorModel.getAngleToTrackAxis() : 0,
-        		sensorModel.getAngleToTrackAxis() < 0 ? sensorModel.getAngleToTrackAxis() * -1 : 0,
+        		sensorModel.getTrackPosition(),
+        		//sensorModel.getTrackPosition() > 0 ? sensorModel.getTrackPosition() : 0,
+        		//sensorModel.getTrackPosition() < 0 ? sensorModel.getTrackPosition() * -1 : 0,
+        		sensorModel.getAngleToTrackAxis() / Math.PI,
+        		//sensorModel.getAngleToTrackAxis() > 0 ? sensorModel.getAngleToTrackAxis() : 0,
+        		//sensorModel.getAngleToTrackAxis() < 0 ? sensorModel.getAngleToTrackAxis() * -1 : 0,
         		(sensorModel.getSpeed() * 1000 / 3600) / 2057.56,
-        		(sensorModel.getLateralSpeed() * 1000 / 3600) / (sensorModel.getTrackEdgeSensors()[0] + sensorModel.getTrackEdgeSensors()[18])
+        		(sensorModel.getLateralSpeed() * 1000 / 3600) / (sensorModel.getTrackEdgeSensors()[0] + sensorModel.getTrackEdgeSensors()[18]),
+        		(sensorModel.getAngleToTrackAxis() / Math.PI) - previousAngle
         };
+        
+        previousAngle = dataS[2];
         
         RealVector s = new ArrayRealVector(dataS);
         RealVector t1 = a.operate(s);
@@ -98,13 +105,19 @@ public class Schumacher extends Controller {
         int num_actions = actions.getRowDimension();
         
         //RealVector values = new ArrayRealVector(num_actions);
-        double maxValue = 0;
+        double maxValue = Double.MIN_VALUE;
         int maxIndex = 0;
         for (int i = 0; i < num_actions; i++) {
         	RealVector t2 = b.operate(actions.getRowVector(i));
         	RealVector sPrime = t1.add(t2);
         	
-        	double value = theta.dotProduct(sPrime);
+        	double[] data = sPrime.getData();
+        	data[0] = data[0] * data[0];
+        	data[1] = Math.abs(data[1]);
+        	data[2] = Math.abs(data[2]);
+        	data[4] = Math.abs(data[4]);
+        	data[5] = Math.abs(data[5]);
+        	double value = theta.dotProduct(data);
         	if (value > maxValue) {
         		maxIndex = i;
         		maxValue = value;
@@ -116,7 +129,9 @@ public class Schumacher extends Controller {
         double velocity = selectedAction.getEntry(0);
         double steering = selectedAction.getEntry(1);
         
-        
+        // CORRECT
+        if (sensorModel.getSpeed() > targetSpeed)
+        	velocity = -1;
         
         action.accelerate = Math.max(velocity, 0.0);
         action.brake = Math.min(velocity, 0.0);

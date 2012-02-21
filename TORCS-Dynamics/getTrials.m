@@ -19,7 +19,7 @@ function Trials = getTrials(filename)
         end
     end
 
-    num_features = 5;
+    num_features = 6;
     
     % Now make the trails
     for i = 1:length(starts)
@@ -42,6 +42,11 @@ function Trials = getTrials(filename)
         %Sn(S(:,1) < 0,5) = S(S(:,1) < 0,1) * -1;
         Sn(:,4) = (S(:,47) * 1000 / 3600) / 2057.56;
         Sn(:,5) = (S(:,48) * 1000 / 3600) ./ (S(:,50) + S(:,68));
+        
+        % Angular velocity
+        temp = circshift(Sn(:,3), -1);
+        temp(1) = 0;
+        Sn(:,6) = Sn(:,3) - temp;
         
         % Feature selection for representing actions
         An = zeros(size(A,1), 2);

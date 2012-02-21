@@ -9,7 +9,7 @@ function Samples = sampleStates(Trials, number)
         ind = ceil(rand(number, 1) * size(Trials{i}.S, 1));
         Samples(row:row + number - 1,:) = Trials{i}.S(ind, :);
         
-        row = row + size(Trials{i}.S, 1);
+        row = row + number;
     end
 end
 
