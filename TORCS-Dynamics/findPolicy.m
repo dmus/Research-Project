@@ -23,7 +23,7 @@ function theta = findPolicy(model, States, Actions)
             q = zeros(num_actions,1);
             for a = 1:num_actions
                 action = Actions(a,:)';
-                s_prime = model.A * state + model.B * action;
+                s_prime = model.A * mapStates(state')' + model.B * action;
                 q(a) = reward(state) + discount * (theta' * phi(s_prime')');
             end
             

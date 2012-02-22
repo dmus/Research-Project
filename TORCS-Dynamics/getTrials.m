@@ -33,20 +33,24 @@ function Trials = getTrials(filename)
         
         % Feature selection for representing states
         Sn = zeros(size(S,1), num_features);
-        Sn(:,1) = S(:,4) / 2057.56;
-        Sn(:,2) = S(:,69);
-        %Sn(S(:,69) > 0,2) = S(S(:,69) > 0,69); 
-        %Sn(S(:,69) < 0,3) = S(S(:,69) < 0,69) * -1;
-        Sn(:,3) = S(:,1) / pi;
-        %Sn(S(:,1) > 0,4) = S(S(:,1) > 0,1);
-        %Sn(S(:,1) < 0,5) = S(S(:,1) < 0,1) * -1;
-        Sn(:,4) = (S(:,47) * 1000 / 3600) / 2057.56;
-        Sn(:,5) = (S(:,48) * 1000 / 3600) ./ (S(:,50) + S(:,68));
+         
+%          Sn(:,1) = S(:,4); % x position
+%          Sn(:,2) = S(:,69); % y position
+%          Sn(:,3) = S(:,1) / pi; % heading
+%          Sn(:,4) = sqrt(S(:,47) .^ 2 + S(:,48) .^2) * 1000 / 3600; % speed
+
+        Sn(:,1) = S(:,4);% / 2057.56;
+        Sn(:,2) = (S(:,69) + 1) .* 7.5;
+        Sn(:,3) = S(:,1);
+        Sn(:,4) = (S(:,47) * 1000 / 3600);% / 2057.56;
+        Sn(:,5) = (S(:,48) * 1000 / 3600);% ./ (S(:,50) + S(:,68));
         
         % Angular velocity
-        temp = circshift(Sn(:,3), -1);
-        temp(1) = 0;
-        Sn(:,6) = Sn(:,3) - temp;
+        temp1 = circshift(Sn(:,3), 1);
+        temp1(1) = 0;
+        temp2 = circshift(S(:,2), 1);
+        temp2(1) = 0;
+        Sn(:,6) = (Sn(:,3) - temp1) ./ (S(:,2) - temp2);
         
         % Feature selection for representing actions
         An = zeros(size(A,1), 2);

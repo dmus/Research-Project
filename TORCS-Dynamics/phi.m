@@ -6,6 +6,8 @@ function F = phi(S)
     F(:,1) = S(:,1).^2;
     F(:,2) = abs(S(:,2));
     F(:,3) = abs(S(:,3));
+    
+    % TODO change
     F(:,4) = S(:,4);
     F(:,5) = abs(S(:,5));
     F(:,6) = abs(S(:,6));
