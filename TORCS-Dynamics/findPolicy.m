@@ -4,7 +4,7 @@ function theta = findPolicy(model, States, Actions)
 %   find an approximation for the value function V as an linear approximation 
 %   of the states: V(s) = theta' * phi(s) . 
 
-    discount = 0.9;
+    discount = 0.99;
 
     theta = zeros(size(States,2), 1);
     
@@ -15,7 +15,7 @@ function theta = findPolicy(model, States, Actions)
     
     F = phi(States);
     
-    for iter = 1:20
+    for iter = 1:50
         fprintf('iteration %d\n', iter);
         y = zeros(m, 1);
         for i = 1:m
