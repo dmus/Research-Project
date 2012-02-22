@@ -64,6 +64,21 @@ public class Schumacher extends Controller {
     	return matrix;
     }
     
+    public double[] mapState(double[] state) {
+        double[] f = new double[8];
+        
+        f[1] = state[1];
+        f[2] = state[2];
+        f[3] = state[3];
+        f[4] = state[4] * Math.cos(state[3]);
+        f[5] = state[4] * Math.sin(state[3]);
+        f[6] = state[5] * Math.cos(state[3]);
+        f[7] = state[5] * Math.sin(state[3]);
+        f[8] = state[6];
+        
+        return f;
+    }
+    
     public Action control(SensorModel sensorModel) {
         Action action = new Action ();
         
@@ -85,22 +100,22 @@ public class Schumacher extends Controller {
         */
         
         double[] dataS = {
-        		sensorModel.getDistanceFromStartLine() / 2057.56,
-        		sensorModel.getTrackPosition(),
+        		sensorModel.getDistanceFromStartLine(),
+        		(sensorModel.getTrackPosition() + 1) * 7.5,
         		//sensorModel.getTrackPosition() > 0 ? sensorModel.getTrackPosition() : 0,
         		//sensorModel.getTrackPosition() < 0 ? sensorModel.getTrackPosition() * -1 : 0,
-        		sensorModel.getAngleToTrackAxis() / Math.PI,
+        		sensorModel.getAngleToTrackAxis(),
         		//sensorModel.getAngleToTrackAxis() > 0 ? sensorModel.getAngleToTrackAxis() : 0,
         		//sensorModel.getAngleToTrackAxis() < 0 ? sensorModel.getAngleToTrackAxis() * -1 : 0,
-        		(sensorModel.getSpeed() * 1000 / 3600) / 2057.56,
-        		(sensorModel.getLateralSpeed() * 1000 / 3600) / (sensorModel.getTrackEdgeSensors()[0] + sensorModel.getTrackEdgeSensors()[18]),
-        		(sensorModel.getAngleToTrackAxis() / Math.PI) - previousAngle
+        		(sensorModel.getSpeed() * 1000 / 3600),
+        		(sensorModel.getLateralSpeed() * 1000 / 3600),
+        		sensorModel.getAngleToTrackAxis() - previousAngle
         };
         
         previousAngle = dataS[2];
         
         RealVector s = new ArrayRealVector(dataS);
-        RealVector t1 = a.operate(s);
+        RealVector t1 = a.operate(mapState(s));
         
         int num_actions = actions.getRowDimension();
         
@@ -129,7 +144,7 @@ public class Schumacher extends Controller {
         double velocity = selectedAction.getEntry(0);
         double steering = selectedAction.getEntry(1);
         
-        // CORRECT
+        // CORRECT speed if going to fast
         if (sensorModel.getSpeed() > targetSpeed)
         	velocity = -1;
         
