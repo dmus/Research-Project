@@ -1,10 +1,11 @@
 function r = reward(state)
 %REWARD Summary of this function goes here
 %   Detailed explanation goes here
-    r = -1 * state(3)^2;
     
-    if state(4) < 1
-        r = -1000;
-    end
+    % Penalize deviation from track axis
+    penalty = (state(2) / 7.5 - 1) ^2;
+    penalty = penalty + (state(3) / pi) ^2;
+    
+    r = -1 * sqrt(penalty);
 end
 
