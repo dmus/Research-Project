@@ -20,7 +20,7 @@ import champ2011client.behaviour.*;
  */
 public class Schumacher extends Controller {
 
-    final double targetSpeed = 30;
+    final double targetSpeed = 15;
 
     protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
@@ -67,14 +67,29 @@ public class Schumacher extends Controller {
     public double[] mapState(double[] state) {
         double[] f = new double[8];
         
+        f[0] = state[0];
         f[1] = state[1];
         f[2] = state[2];
-        f[3] = state[3];
-        f[4] = state[4] * Math.cos(state[3]);
-        f[5] = state[4] * Math.sin(state[3]);
-        f[6] = state[5] * Math.cos(state[3]);
-        f[7] = state[5] * Math.sin(state[3]);
-        f[8] = state[6];
+        f[3] = state[3] * Math.cos(state[2]);
+        f[4] = state[3] * Math.sin(state[2]);
+        f[5] = state[4] * Math.cos(state[2]);
+        f[6] = state[4] * Math.sin(state[2]);
+        f[7] = state[5];
+        
+        return f;
+    }
+    
+    public double[] phi(double[] state) {
+        double[] f = new double[8];
+        
+        f[0] = state[0];
+        f[1] = Math.abs(state[1] - 7.5);
+        f[2] = Math.abs(state[2]);
+        f[3] = state[3] * Math.cos(state[2]);
+        f[4] = Math.abs(state[3] * Math.sin(state[2]));
+        f[5] = Math.abs(state[4] * Math.cos(state[2]));
+        f[6] = Math.abs(state[4] * Math.sin(state[2]));
+        f[7] = Math.abs(state[5]);
         
         return f;
     }
@@ -115,7 +130,8 @@ public class Schumacher extends Controller {
         previousAngle = dataS[2];
         
         RealVector s = new ArrayRealVector(dataS);
-        RealVector t1 = a.operate(mapState(s));
+        double[] t = a.operate(mapState(s.toArray()));
+        RealVector t1 = new ArrayRealVector(t);
         
         int num_actions = actions.getRowDimension();
         
@@ -127,12 +143,8 @@ public class Schumacher extends Controller {
         	RealVector sPrime = t1.add(t2);
         	
         	double[] data = sPrime.getData();
-        	data[0] = data[0] * data[0];
-        	data[1] = Math.abs(data[1]);
-        	data[2] = Math.abs(data[2]);
-        	data[4] = Math.abs(data[4]);
-        	data[5] = Math.abs(data[5]);
-        	double value = theta.dotProduct(data);
+
+        	double value = theta.dotProduct(phi(data));
         	if (value > maxValue) {
         		maxIndex = i;
         		maxValue = value;

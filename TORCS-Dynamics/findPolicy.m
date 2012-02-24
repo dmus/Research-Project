@@ -6,7 +6,7 @@ function theta = findPolicy(model, States, Actions)
 
     discount = 0.99;
 
-    theta = zeros(size(States,2), 1);
+    theta = zeros(8, 1);
     
     
     % Number of state samples
