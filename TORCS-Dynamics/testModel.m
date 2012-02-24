@@ -6,7 +6,7 @@ steerings = [0.2 0 -0.2];
 Actions = [x1(:) x2(:)];
 
 %% Create data set
-Trials = getTrials('Trials/track01_mrracer.mat');
+Trials = getTrials('Trials/track01_simple.mat');
 
 state_dimension = 6;
 num_state_features = 8;
