@@ -11,7 +11,7 @@ function Trials = getTrials(filename)
     % Separate into different trials for each lap
     % First, find starting points for each lap
     ind = find(States(:,4) < 2);
-    starts = [1];
+    starts = 1;
     for i = 1:length(ind)
         j = ind(i);
         if States(j - 1, 4) > States(j, 4)
@@ -19,7 +19,7 @@ function Trials = getTrials(filename)
         end
     end
 
-    num_features = 6;
+    state_dimension = 5;
     
     % Now make the trails
     for i = 1:length(starts)
@@ -32,7 +32,7 @@ function Trials = getTrials(filename)
         A = Actions(starts(i):stop, :);
         
         % Feature selection for representing states
-        Sn = zeros(size(S,1), num_features);
+        Sn = zeros(size(S,1), state_dimension);
          
 %          Sn(:,1) = S(:,4); % x position
 %          Sn(:,2) = S(:,69); % y position
@@ -43,14 +43,14 @@ function Trials = getTrials(filename)
         Sn(:,2) = (S(:,69) + 1) .* 7.5;
         Sn(:,3) = S(:,1);
         Sn(:,4) = (S(:,47) * 1000 / 3600);% / 2057.56;
-        Sn(:,5) = (S(:,48) * 1000 / 3600);% ./ (S(:,50) + S(:,68));
+%         Sn(:,5) = (S(:,48) * 1000 / 3600);% ./ (S(:,50) + S(:,68));
         
         % Angular velocity
-        temp1 = circshift(Sn(:,3), 1);
-        temp1(1) = 0;
-        temp2 = circshift(S(:,2), 1);
-        temp2(1) = 0;
-        Sn(:,6) = (Sn(:,3) - temp1) ./ (S(:,2) - temp2);
+        temp1 = circshift(Sn(:,3), 2);
+        temp1(1:2) = 0;
+        temp2 = circshift(S(:,2), 2);
+        temp2(1:2) = 0;
+        Sn(:,5) = (Sn(:,3) - temp1) ./ (S(:,2) - temp2);
         
         % Feature selection for representing actions
         An = zeros(size(A,1), 2);

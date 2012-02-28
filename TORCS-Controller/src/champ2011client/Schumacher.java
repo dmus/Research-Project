@@ -64,32 +64,35 @@ public class Schumacher extends Controller {
     	return matrix;
     }
     
-    public double[] mapState(double[] state) {
-        double[] f = new double[8];
+    public RealVector mapState(RealVector state) {
+        double[] f = new double[7];
         
-        f[0] = state[0];
-        f[1] = state[1];
-        f[2] = state[2];
-        f[3] = state[3] * Math.cos(state[2]);
-        f[4] = state[3] * Math.sin(state[2]);
-        f[5] = state[4] * Math.cos(state[2]);
-        f[6] = state[4] * Math.sin(state[2]);
-        f[7] = state[5];
+        f[0] = state.getEntry(0);
+        f[1] = state.getEntry(1);
+        f[2] = state.getEntry(2);
+        f[3] = state.getEntry(3);
+        f[4] = state.getEntry(3) * Math.cos(state.getEntry(2));
+        f[5] = state.getEntry(3) * Math.sin(state.getEntry(2));
+        //f[6] = state[4];
+        //f[7] = state[4] * Math.cos(state[2]);
+        //f[8] = state[4] * Math.sin(state[2]);
+        f[6] = state.getEntry(4);;
         
-        return f;
+        return new ArrayRealVector(f);
     }
     
     public double[] phi(double[] state) {
-        double[] f = new double[8];
+        double[] f = new double[6];
         
         f[0] = state[0];
-        f[1] = Math.abs(state[1] - 7.5);
+        f[1] = Math.abs(state[1] / 7.5 - 1);
         f[2] = Math.abs(state[2]);
         f[3] = state[3] * Math.cos(state[2]);
         f[4] = Math.abs(state[3] * Math.sin(state[2]));
-        f[5] = Math.abs(state[4] * Math.cos(state[2]));
-        f[6] = Math.abs(state[4] * Math.sin(state[2]));
-        f[7] = Math.abs(state[5]);
+        //f[5] = Math.abs(state[4] * Math.cos(state[2]));
+        //f[6] = Math.abs(state[4] * Math.sin(state[2]));
+        //f[5] = Math.abs(state[4]);
+        f[5] = 1;
         
         return f;
     }
@@ -130,17 +133,24 @@ public class Schumacher extends Controller {
         previousAngle = dataS[2];
         
         RealVector s = new ArrayRealVector(dataS);
-        double[] t = a.operate(mapState(s.toArray()));
-        RealVector t1 = new ArrayRealVector(t);
+        //double[] t = a.operate(mapState(s.toArray()));
+        //RealVector t1 = new ArrayRealVector(t);
         
         int num_actions = actions.getRowDimension();
         
         //RealVector values = new ArrayRealVector(num_actions);
         double maxValue = Double.MIN_VALUE;
         int maxIndex = 0;
+        
+        // Select action which results in state with highest estimated value
         for (int i = 0; i < num_actions; i++) {
-        	RealVector t2 = b.operate(actions.getRowVector(i));
-        	RealVector sPrime = t1.add(t2);
+        	RealVector sPrime = s;
+            for (int k = 0; k < 5;k++) {
+                sPrime = a.operate(mapState(sPrime)).add(b.operate(actions.getRowVector(i)));
+            }
+
+        	//RealVector t2 = b.operate(actions.getRowVector(i));
+        	//RealVector sPrime = t1.add(t2);
         	
         	double[] data = sPrime.getData();
 

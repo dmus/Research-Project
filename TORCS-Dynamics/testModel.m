@@ -1,5 +1,5 @@
 %% Discretize action space
-velocities = [0.5 0 -0.5];
+velocities = [0.5 0];
 steerings = [0.2 0 -0.2];
     
 [x1,x2] = ndgrid(velocities, steerings);
@@ -8,8 +8,8 @@ Actions = [x1(:) x2(:)];
 %% Create data set
 Trials = getTrials('Trials/track01_simple.mat');
 
-state_dimension = 6;
-num_state_features = 8;
+state_dimension = 5;
+num_state_features = 7;
 num_action_features = 2;
 
 X = zeros(0,num_state_features + num_action_features);
@@ -45,6 +45,14 @@ for i = 1:size(y,2)
     model.B(i,:) = theta(num_state_features + 1:end);
 end
 
+% Fix for angular velocity
+    theta = linearRegression(X(:,[7 9]),y(:,5));
+    model.A(5,:) = 0;
+    model.B(5,:) = 0;
+    model.A(5,7) = theta(1);
+    model.B(5,2) = theta(2);
+
+
 %% Compute error in linear regression model
 errors = zeros(state_dimension,1);
 for i = 1:state_dimension
@@ -55,10 +63,10 @@ end
 errors
 
 %% Simulate linear regression model
-steps = 500;
+steps = 25;
 
 % Start state
-s = [0.0 10.0027 -0.0050 0 0 0]';
+s = [0.0 7.5 0 1 0 0]';
 s = repmat(s,1,size(Actions,1));
 
 
