@@ -1,6 +1,8 @@
 function F = phi(S)
-%PHI Summary of this function goes here
-%   Detailed explanation goes here
+%PHI Get feature mapping of states used for approximating value fuction.
+%   F = PHI(S) returns features for states in matrix S. Features can be
+%   used to approximate values of states in S assuming that 
+%   V(s) = theta' * phi(s)
     F = zeros(size(S));
 
     % x-position

@@ -1,6 +1,10 @@
 function Trials = getTrials(filename)
-%GETTRIALS Summary of this function goes here
-%   Detailed explanation goes here
+%GETTRIALS Get all laps (trials) from a .mat log file of a race.
+%   TRIALS = GETTRIALS(FILENAME) extracts all trials from a log file in 
+%   .mat format. A new trial starts when the finish line is passed. A trial
+%   exists of a state-action trajectory.
+    state_dimension = 5;
+
     T = load(filename);
     num_trials = 0;
     
@@ -18,8 +22,6 @@ function Trials = getTrials(filename)
             starts = [starts j];
         end
     end
-
-    state_dimension = 5;
     
     % Now make the trails
     for i = 1:length(starts)

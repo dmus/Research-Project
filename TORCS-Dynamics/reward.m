@@ -1,6 +1,7 @@
 function r = reward(state)
-%REWARD Summary of this function goes here
-%   Detailed explanation goes here
+%REWARD Reward obtained for being in state STATE
+%   R = REWARD(STATE) gives a reward r depending on state features of state
+%   STATE
     
     % Penalize deviation from track axis and slow speed
     penalty = (state(2) / 7.5 - 1) ^2;

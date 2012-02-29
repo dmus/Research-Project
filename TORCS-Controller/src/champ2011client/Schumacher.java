@@ -81,6 +81,16 @@ public class Schumacher extends Controller {
         return new ArrayRealVector(f);
     }
     
+    public RealVector mapAction(RealVector action) {
+        double[] f = new double[3];
+        
+        f[0] = action.getEntry(0);
+        f[1] = action.getEntry(1);
+        f[2] = Math.abs(action.getEntry(1));
+        
+        return new ArrayRealVector(f);
+    }
+    
     public double[] phi(double[] state) {
         double[] f = new double[6];
         
@@ -146,7 +156,7 @@ public class Schumacher extends Controller {
         for (int i = 0; i < num_actions; i++) {
         	RealVector sPrime = s;
             for (int k = 0; k < 5;k++) {
-                sPrime = a.operate(mapState(sPrime)).add(b.operate(actions.getRowVector(i)));
+                sPrime = a.operate(mapState(sPrime)).add(b.operate(mapAction(actions.getRowVector(i))));
             }
 
         	//RealVector t2 = b.operate(actions.getRowVector(i));

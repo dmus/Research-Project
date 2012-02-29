@@ -15,7 +15,7 @@ function theta = findPolicy(model, States, Actions)
     
     F = phi(States);
     
-    for iter = 1:100
+    for iter = 1:20
         fprintf('iteration %d\n', iter);
         y = zeros(m, 1);
         
@@ -28,7 +28,7 @@ function theta = findPolicy(model, States, Actions)
                 
                 s_prime = state;
                 for k = 1:5
-                    s_prime = model.A * mapStates(s_prime')' + model.B * action;
+                    s_prime = model.A * getStateFeatures(s_prime')' + model.B * getActionFeatures(action')';
                 end
                 
                 q(a) = reward(state) + discount * (theta' * phi(s_prime')');
@@ -38,7 +38,7 @@ function theta = findPolicy(model, States, Actions)
         end
         
         theta = linearRegression(F, y);
-        J = computeCost(F, y, theta);
+        %J = computeCost(F, y, theta);
     end
 end
 
