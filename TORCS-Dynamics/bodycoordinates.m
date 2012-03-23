@@ -105,5 +105,5 @@ for i = 1:length(ind)
     end
 end
 
-scatter(Sg(:,1), Sg(:,2)*-1);
-%scatter(Sg(157:4110,1), Sg(157:4110,2)*-1)
+%scatter(Sg(:,1), Sg(:,2)*-1);
+scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1)
