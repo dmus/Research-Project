@@ -18,8 +18,9 @@ for i = 1:length(ind)
     end
 end
 
-% ONLY FOR TESTING
+% START ONLY FOR TESTING
 States = States(starts(2):starts(3)-1,:);
+% END ONLY FOR TESTING
 
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
@@ -27,16 +28,32 @@ S(:,2) = States(:,48) * 1000 / 3600;
 
 %% Compute yaw rate
 prevDistanceRaced = circshift(States(:,5),1);
-prevDistanceRaced(1) = 0;
 b = States(:,5) - prevDistanceRaced;
 
 % TODO starts
 prevDistanceFromStart = circshift(States(:,4),1);
 L = States(:,4) - prevDistanceFromStart;
-L(1) = 0;
 
-deviation = ((States(:,69) + 1) ./ 2 .* 15) - 7.5;
+a = ((States(:,69) + 1) ./ 2 .* 15) - 7.5;
+c = circshift(a, 1);
 
+angles = zeros(size(a, 1), 2);
+
+for i = 2:length(b)
+    const = [a(i) b(i) c(i) L(i)];
+    [leftAngle, fval] = fsolve(@(x) cosinusLaw(x, const, 'left'), 0.1);
+    [rightAngle, fval] = fsolve(@(x) cosinusLaw(x, const, 'right'), 0.1);
+    angles(i, 1) = leftAngle;
+    angles(i, 2) = rightAngle;
+end
+
+angles = angles .* -1;
+
+yawRate = States(:,1) - circshift(States(:,1),1);
+yawRate(1) = 0;
+
+yawRate = angles(:,1);%yawRate + angles;
+S(:,3) = yawRate;
 %% Plot worldcoordinates
 % Global coordinates
 delta_t = 0.02;
@@ -59,5 +76,5 @@ end
 
 
 
-%scatter(Sg(:,1), Sg(:,2)*-1);
-scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1)
+scatter(Sg(:,1), Sg(:,2)*-1);
+%scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1)

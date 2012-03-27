@@ -1,5 +1,5 @@
 clear;
-filename = 'Trials/track01_MrRacer.mat';
+filename = 'Trials/track01_ExploreDriver4.mat';
 
 T = load(filename);
 num_trials = 0;
@@ -105,5 +105,5 @@ for i = 1:length(ind)
     end
 end
 
-%scatter(Sg(:,1), Sg(:,2)*-1);
-scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1)
+scatter(Sg(:,1), Sg(:,2)*-1);
+%scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1)
