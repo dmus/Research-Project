@@ -1,5 +1,7 @@
 %% Implementation of Acceleration-One-Step
 clear;
+
+% Training run
 filename = 'Trials/track01_MrRacer.mat';
 
 T = load(filename);
@@ -23,26 +25,7 @@ times = cumsum(times);
 %% Compute longitudinal and lateral speeds in m/s
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
-
-%% Estimate yaw rate
-wheelRadius = 0.3179;
-LeftSpeed = States(:,71) .* wheelRadius;
-RightSpeed = States(:,70) .* wheelRadius;
-
-%[LeftSpeed RightSpeed States(:,47) ./ 3.6]
-
-L1 = LeftSpeed .* 0.02;
-L2 = RightSpeed .* 0.02;
-
-r2 = 1.94 ./ (1 - L2 ./ L1);
-r1 = r2 - 1.94;
-
-angle1 = L1 ./ r1;
-angle2 = L2 ./ r2;
-
-Rot = [angle1 .* 50 angle2 .* 50];
-
-S(:,3) = mean(Rot,2);
+S(:,3) = estimateYawRate(States);
 
 %% Controls
 U = [Actions(:, [1 2 5]) ones(size(Actions,1),1)];
@@ -130,13 +113,22 @@ for t = 1:T - H
     for h = 1:H
         y = zeros(1,2);
         x = zeros(1,7);
-        for tau = 0:h-1
-            % TODO rotate and dt 
+        yaw = 0;
+        for tau = 0:h-1 
             dt = times(t + tau + 1) - times(t + tau);
-            R = ones(2);
             
-            x = x + ([S(t+tau,:) U(t+tau,:)] * dt * R(1,1)); % + hele zooi * R(1,2)
-            y = y + Accelerations(t+tau,1:2) * dt;
+            R = [cos(-yawrate) -sin(-yawrate); sin(-yawrate) cos(-yawrate)];
+            if tau > 0
+                s = Predictions(t,tau,:);
+            else
+                s = S(t,:);
+            end   
+            
+            
+            x = x + ([s U(t+tau,:)] * R(1,1) + [s U(t+tau,:)] * R(1,2)) * dt;
+            y = y + R * Accelerations(t+tau,1:2) * dt;
+            
+            yaw = yaw + s(3);
         end
         X(k,:) = x;
         Y(k,:) = y;
@@ -144,6 +136,39 @@ for t = 1:T - H
     end
 end
 
+theta = linearRegression(X,Y(:,1));
+A = zeros(size(Apos));
+B = zeros(size(Apos));
+A(1,:) = theta(1:3);
+B(1,:) = theta(4:7);
+
 %% Update A,B
 
+% TODO linesearch to choose alpha
+alpha = 0.1;
+
+Apos = (1-alpha) * Apos + alpha * A;
+Bpos = (1-alpha) * Bpos + alpha * B;
+
 %% Check if converged
+change = 0;
+change = change + sqrt(sum((model{i+1}.Apos(:) - model{i}.Apos(:)) .^2));
+
+%% Test performance
+% Test run
+filename = 'Trials/track01_MrRacer.mat';
+
+T = load(filename);
+    
+% Remove states and actions before start signal
+States = T.States(T.States(:,2) >= 0,:);
+Actions = T.Actions(T.States(:,2) >= 0,:);
+
+% Compute longitudinal and lateral speeds in m/s
+S(:,1) = States(:,47) * 1000 / 3600;
+S(:,2) = States(:,48) * 1000 / 3600;
+S(:,3) = estimateYawRate(States);
+
+% Controls
+U = [Actions(:, [1 2 5]) ones(size(Actions,1),1)];
+
