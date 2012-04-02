@@ -4,12 +4,9 @@ All code for the gridworld experiment is in this folder.
 
 - Racetrack
 
-This folder contains the racetracks and code for racetrack experiments.
+This folder contains the racetracks and code for simple discretized racetrack experiments.
 
-- TORCS-Dynamics
+- Simulated-Car-Racing
 
-Contains state-action trajectories of experts and trials in TORCS.
-
-- TORCS-Controller
-
-The actual controller for the TORCS simulator (Java implementation).
+Contains all code concerning experiments for the Simulated Car Racing Championship. This includes experiments
+to build a dynamics model, the actual controller and some tests with SLAM to build a map.

@@ -154,21 +154,4 @@ Bpos = (1-alpha) * Bpos + alpha * B;
 change = 0;
 change = change + sqrt(sum((model{i+1}.Apos(:) - model{i}.Apos(:)) .^2));
 
-%% Test performance
-% Test run
-filename = 'Trials/track01_MrRacer.mat';
-
-T = load(filename);
-    
-% Remove states and actions before start signal
-States = T.States(T.States(:,2) >= 0,:);
-Actions = T.Actions(T.States(:,2) >= 0,:);
-
-% Compute longitudinal and lateral speeds in m/s
-S(:,1) = States(:,47) * 1000 / 3600;
-S(:,2) = States(:,48) * 1000 / 3600;
-S(:,3) = estimateYawRate(States);
-
-% Controls
-U = [Actions(:, [1 2 5]) ones(size(Actions,1),1)];
 
