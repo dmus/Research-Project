@@ -34,8 +34,16 @@ function [model, S, U, times, Accelerations] = buildAccelerationOneStep(trainrun
     S(:,3) = estimateYawRate(States);
 
     % Controls, acceleration, braking and an additional 1
-    U = [Actions(:, [1 2 5]) ones(size(Actions,1),1)];
+    speedControl = Actions(:,1) + -1 * Actions(:,2);
+    U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
 
+    % Additional features
+    F(:,1) = abs(S(:,2));
+    F(:,2) = abs(S(:,3));
+    F(:,3) = abs(U(:,2));
+    F(:,4) = -1 * S(:,1);
+    F(:,5) = -1 * U(:,1);
+    
     % Compute acclerations and store them in a matrix
     Accelerations = zeros(size(S,1) - 1, size(S,2));
 
@@ -53,32 +61,42 @@ function [model, S, U, times, Accelerations] = buildAccelerationOneStep(trainrun
     end
 
     % We have 4 matrices for our acceleration-model
+    
+    
     Apos = zeros(2,3);
-    Bpos = zeros(2,4);
+    Bpos = zeros(2,3);
     Arot = zeros(1,3);
-    Brot = zeros(1,4);
+    Brot = zeros(1,3);
 
     % Solve following linear least squares problems:
     % - Acceleration in x-direction, steering control not included
-    X = [S(1:end-1,:) U(1:end-1,[1 2 4])];
+    X = [S(1:end-1,:) U(1:end-1,:) F(1:end-1,:)];
+    Delta = X - circshift(X,1);
+    Delta(1,:) = 0;
+    
+    X = [X Delta];
+    
     y = Accelerations(:,1);
+    
+    X(:,[2 3 5 10 11 13 14 16 21 22]) = 0;
+    
     theta = linearRegression(X, y);
     Apos(1,:) = theta(1:3);
-    Bpos(1,[1 2 4]) = theta([4 5 6]);
+    Bpos(1,:) = theta(4:6);
 
     % - Acceleration in y-direction
     X = [S(1:end-1,:) U(1:end-1,:)];
     y = Accelerations(:,2);
     theta = linearRegression(X, y);
     Apos(2,:) = theta(1:3);
-    Bpos(2,:) = theta(4:7);
+    Bpos(2,:) = theta(4:6);
 
     % - Acceleration in angular speed
     X = [S(1:end-1,:) U(1:end-1,:)];
     y = Accelerations(:,3);
     theta = linearRegression(X, y);
     Arot(1,:) = theta(1:3);
-    Brot(1,:) = theta(4:7);
+    Brot(1,:) = theta(4:6);
 
     % Ready, put into model
     model.Apos = Apos;

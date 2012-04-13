@@ -17,7 +17,8 @@ function [velocityError, angularRateError] = testPerformance(model, H, testrun)
     S(:,3) = estimateYawRate(States);
 
     % Controls
-    U = [Actions(:, [1 2 5]) ones(size(Actions,1),1)];
+    speedControl = Actions(:,1) + -1 * Actions(:,2);
+    U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
 
     times = States(:,2) - circshift(States(:,2),1);
     times(1) = 0;

@@ -11,6 +11,7 @@ function model = buildAccelerationLagged(trainrun, H)
     
     i = 1;
     epsilon = 0.1;
+    T = size(S,1); % Number of timesteps
     
     model{i} = initialModel;
     
@@ -18,33 +19,10 @@ function model = buildAccelerationLagged(trainrun, H)
     while ~stop
         % 2. Simulate in current model
         disp('2. Simulating');
+        [Predictions, error] = simulate(model{i}, H, S, U, times);
+        cost{i} = error;
         
-        T = size(S,1);
-        Predictions = zeros(T, H, 3);
-
-        for t = 1:T-H
-            for h = 1:H
-                % Predict s at time t+h given s at time t
-                s = S(t,:)';
-                for tau=0:h-1
-                    % Predict acceleration
-                    accelerations = zeros(3,1);
-                    accelerations(1:2) = model{i}.Apos * s + model{i}.Bpos * U(t+tau,:)';
-                    accelerations(3) = model{i}.Arot * s + model{i}.Brot * U(t+tau,:)';
-
-                    yawrate = s(3);
-                    R = [cos(yawrate) -sin(yawrate); sin(yawrate) cos(yawrate)];
-
-                    % Compute new state
-                    dt = times(t+tau+1) - times(t+tau);
-                    s(1:2) = R * (s(1:2) + accelerations(1:2) * dt);
-                    s(3) = s(3) + accelerations(3) * dt;
-                end
-
-                % Store prediction
-                Predictions(t,h,:) = s;
-            end
-        end
+        fprintf('Simulation error: %f\n', error);
         
         % 3. Solve 3 least-squares problem
         disp('3. Solving least-squares');
@@ -60,9 +38,9 @@ function model = buildAccelerationLagged(trainrun, H)
         for t = 1:T-H
             for h = 1:H
                 y = zeros(1,3);
-                xx = zeros(1,7);
-                xy = zeros(1,7);
-                xomega = zeros(1,7);
+                xx = zeros(1,6);
+                xy = zeros(1,6);
+                xomega = zeros(1,6);
                 
                 % Angle made so far in current simulation
                 yaw = 0;
@@ -71,7 +49,7 @@ function model = buildAccelerationLagged(trainrun, H)
                     dt = times(t+tau+1) - times(t+tau);
                     
                     % Rotate back to start of current simulation
-                    R = [cos(-yawrate) -sin(-yawrate); sin(-yawrate) cos(-yawrate)];
+                    R = [cos(-yaw) -sin(-yaw); sin(-yaw) cos(-yaw)];
                     
                     % s is current state
                     if tau > 0
@@ -108,30 +86,48 @@ function model = buildAccelerationLagged(trainrun, H)
         Brot = zeros(size(model{i}.Brot));
         
         % Exclude steering command
-        Xx(:,6) = 0;
+        Xx(:,5) = 0;
         theta = linearRegression(Xx,Y(:,1));
         
         Apos(1,:) = theta(1:3);
-        Bpos(1,:) = theta(4:7);
+        Bpos(1,:) = theta(4:6);
         
         theta = linearRegression(Xy,Y(:,2));
         Apos(2,:) = theta(1:3);
-        Bpos(2,:) = theta(4:7);
+        Bpos(2,:) = theta(4:6);
         
         theta = linearRegression(Xomega,Y(:,3));
         Arot(1,:) = theta(1:3);
-        Brot(1,:) = theta(4:7);
+        Brot(1,:) = theta(4:6);
         
         % 4. Update A,B
         disp('4. Updating model');
         
-        % TODO linesearch to choose alpha
-        alpha = 0.1;
+        % Linesearch to choose stepsize alpha
+        alpha = 1;
+        
+        improved = false;
+        while ~improved
+            temp.Apos = (1-alpha) * model{i}.Apos + alpha * Apos;
+            temp.Bpos = (1-alpha) * model{i}.Bpos + alpha * Bpos;
+            temp.Arot = (1-alpha) * model{i}.Arot + alpha * Arot;
+            temp.Brot = (1-alpha) * model{i}.Brot + alpha * Brot;
+            
+            [~, error] = simulate(temp, H, S, U, times);
+            
+            if error < cost{i}
+                improved = true;
+            else
+                alpha = 0.5 * alpha;
+            end
+        end
 
-        model{i+1}.Apos = (1-alpha) * model{i}.Apos + alpha * Apos;
-        model{i+1}.Bpos = (1-alpha) * model{i}.Bpos + alpha * Bpos;
-        model{i+1}.Arot = (1-alpha) * model{i}.Arot + alpha * Arot;
-        model{i+1}.Brot = (1-alpha) * model{i}.Brot + alpha * Brot;
+        fprintf('Stepsize alpha: %f\n', alpha);
+        
+        model{i+1}.Apos = temp.Apos;
+        model{i+1}.Bpos = temp.Bpos;
+        model{i+1}.Arot = temp.Arot;
+        model{i+1}.Brot = temp.Brot;
         
         % 5. Check if converged
         disp('5. Check stop condition');

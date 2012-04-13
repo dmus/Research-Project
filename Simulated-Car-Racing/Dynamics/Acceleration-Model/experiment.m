@@ -1,11 +1,14 @@
 addpath('../Yaw-Rate-Estimation');
 addpath('../Trials');
 
-trainingsrun = 'track01_MrRacer.mat';
-testrun = trainingsrun;
+trainingsrun = 'Wheel-2_MrRacer.mat';
+testrun = 'E-Track-2_MrRacer';
 
 % Number of steps to simulate
-H = 50;
+H = 10;
 
-model = buildAccelerationOneStep(trainingsrun);
+[model, S, U, times] = buildAccelerationOneStep(trainingsrun);
+
+
+
 [velocityError, angularRateError] = testPerformance(model, H, testrun);

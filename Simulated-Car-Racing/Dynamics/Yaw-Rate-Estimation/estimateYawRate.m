@@ -10,8 +10,10 @@ function yawrates = estimateYawRate(States)
 
     L1 = LeftSpeed .* 0.02;
     L2 = RightSpeed .* 0.02;
-
+    
     r2 = 1.94 ./ (1 - L2 ./ L1);
+    r2(isnan(r2)) = 1.94 ./ 1;
+    
     r1 = r2 - 1.94;
 
     angle1 = L1 ./ r1;
@@ -20,6 +22,7 @@ function yawrates = estimateYawRate(States)
     Rot = [angle1 .* 50 angle2 .* 50];
 
     yawrates = mean(Rot,2);
-
+    yawrates(isnan(yawrates)) = 0;
+    yawrates(isinf(yawrates)) = 0;
 end
 

@@ -1,6 +1,7 @@
 %% Implementation of GraphSLAM
 clear;
-filename = '../Trials/track01_MrRacer.mat';
+addpath('../Dynamics/Yaw-Rate-Estimation', '../Dynamics/Trials');
+filename = 'track01_ExploreDriver.mat';
 
 T = load(filename);
     
@@ -11,27 +12,10 @@ Actions = T.Actions(T.States(:,2) > 0,:);
 %% Compute longitudinal and lateral speeds in m/s
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
+S(:,3) = estimateYawRate(States);
 
-%% Estimate yaw rate
-wheelRadius = 0.3179;
-LeftSpeed = States(:,71) .* wheelRadius;
-RightSpeed = States(:,70) .* wheelRadius;
+%S = S(1:30,:);
 
-%[LeftSpeed RightSpeed States(:,47) ./ 3.6]
-
-L1 = LeftSpeed .* 0.02;
-L2 = RightSpeed .* 0.02;
-
-r2 = 1.94 ./ (1 - L2 ./ L1);
-r1 = r2 - 1.94;
-
-angle1 = L1 ./ r1;
-angle2 = L2 ./ r2;
-
-Rot = [angle1 .* 50 angle2 .* 50];
-
-S(:,3) = mean(Rot,2);
-S = S(1:30,:);
 %% Compute global coordinates
 % TODO project onto track-axis
 delta_t = 0.02;
