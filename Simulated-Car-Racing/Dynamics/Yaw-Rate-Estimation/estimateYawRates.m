@@ -1,4 +1,4 @@
-function yawrates = estimateYawRate(States)
+function yawrates = estimateYawRates(States)
 %ESTIMATEYAWRATE Summary of this function goes here
 %   Detailed explanation goes here
     
