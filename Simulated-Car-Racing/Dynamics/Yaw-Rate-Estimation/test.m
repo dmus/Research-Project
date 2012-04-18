@@ -7,10 +7,15 @@ T = load(filename);
 States = T.States(T.States(:,2) > 0,:);
 Actions = T.Actions(T.States(:,2) > 0,:);
 
+States = States(1:2156,:);
+Actions = Actions(1:2156,:);
+
+times = computeDiscretizedTimes(States);
+
 %yawRates = findYawRates(States);
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
-S(:,3) = yawRates_scan;
+S(:,3) = findYawRates(States);
 
 
 
