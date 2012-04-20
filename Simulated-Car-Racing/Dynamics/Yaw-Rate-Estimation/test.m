@@ -1,3 +1,4 @@
+clear;
 addpath('../Trials');
 filename = 'track01_MrRacer.mat';
 
@@ -7,28 +8,15 @@ T = load(filename);
 States = T.States(T.States(:,2) > 0,:);
 Actions = T.Actions(T.States(:,2) > 0,:);
 
-States = States(1:2156,:);
-Actions = Actions(1:2156,:);
+States = States(1:4110,:);
+Actions = Actions(1:4110,:);
 
 times = computeDiscretizedTimes(States);
 
-%yawRates = findYawRates(States);
+[yawRates, LeftEdge, RightEdge] = findYawRates(States);
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
-S(:,3) = findYawRates(States);
-
-
-
-% Plot result
-% C = repmat([1 0 0], size(Landmarks,1), 1);
-% C = [C; [0 .3 .3]];
-% C = [C; [.6 .6 0]];
-% C = [C; repmat([0 0 1], size(ResultingPoints,1), 1)];
-% 
-% x = [Landmarks(:,2); pos(2); move(2); ResultingPoints(:,2)];
-% y = [Landmarks(:,1); pos(1); move(1); ResultingPoints(:,1)];
-% 
-% scatter(x * -1, y, 10, C, 'fill');
+S(:,3) = yawRates;
 
 % Compute world coordinates
 Sg = [zeros(size(S,1), 3) S];
@@ -59,5 +47,5 @@ for i = 1:length(ind)
     end
 end
 
-scatter(Sg(1:2156,2)*-1, Sg(1:2156,1));
+scatter(Sg(157:4110,2)*-1, Sg(157:4110,1), 2, 'fill');
 %scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1);
