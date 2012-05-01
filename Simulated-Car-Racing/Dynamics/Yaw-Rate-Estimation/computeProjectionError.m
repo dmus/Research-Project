@@ -1,19 +1,17 @@
-function [error, ResultingPoints] = computeProjectionError(LandmarksLeft, LandmarksRight, move, Ranges, angle)
+function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, angle)
 %COMPUTEPROJECTIONERROR Summary of this function goes here
 %   Detailed explanation goes here
     error = 0;
     
     R = [cos(angle) -sin(angle); sin(angle) cos(angle)];
-    ResultingPoints = (R * bsxfun(@plus, Ranges, move)')';
+    PointsLeft = bsxfun(@plus, R*PointsLeft', move')';
+    PointsRight = bsxfun(@plus, R*PointsRight', move')';
+    %ResultingPoints = (R * bsxfun(@plus, Ranges, move)')';
     
     % Range finders at the left side
     index = 1;
-    for i = 1:size(Ranges,1)
-        if abs(Ranges(i,2) - Ranges(1,2)) > 8
-            break; % Continue with right side
-        end
-        
-        Point = ResultingPoints(i,:)';
+    for i = 1:size(PointsLeft,1)
+        Point = PointsLeft(i,:)';
 
         while true
             dx = LandmarksLeft(index+1,1) - LandmarksLeft(index,1);
@@ -45,17 +43,8 @@ function [error, ResultingPoints] = computeProjectionError(LandmarksLeft, Landma
     
     % Same for right side
     index = 1;
-    for j = 1:size(Ranges,1)
-        i = size(Ranges,1) + 1 - j;
-        if abs(Ranges(i,2) - Ranges(end,2)) > 8
-            break; % Left side
-        end
-        
-        if size(LandmarksRight,1) == 0
-            disp('Stop');
-        end
-        
-        Point = ResultingPoints(i,:)';
+    for i = 1:size(PointsRight,1)
+        Point = PointsRight(i,:)';
         
         while true
             dx = LandmarksRight(index+1,1) - LandmarksRight(index,1);

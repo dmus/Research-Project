@@ -8,7 +8,7 @@ function S = smoothCurve(P, fixed, weight)
     change = tolerance;
     while change >= tolerance
         change = 0;
-        for i=1:size(P,1)
+        for i = 1:size(P,1)
             if mod(i,2) == 0 && i > 2 && i < size(P,1) - 1
                 aux = S(i,:);
 

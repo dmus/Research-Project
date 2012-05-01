@@ -1,6 +1,6 @@
 clear;
 addpath('../Trials');
-filename = 'track01_MrRacer.mat';
+filename = 'Wheel-2_MrRacer.mat';
 
 T = load(filename);
     
@@ -8,12 +8,13 @@ T = load(filename);
 States = T.States(T.States(:,2) > 0,:);
 Actions = T.Actions(T.States(:,2) > 0,:);
 
-States = States(1:4110,:);
-Actions = Actions(1:4110,:);
+States = States(1:5636,:);
+Actions = Actions(1:5636,:);
 
 times = computeDiscretizedTimes(States);
 
-[yawRates, LeftEdge, RightEdge] = findYawRates(States);
+[yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States);
+
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
 S(:,3) = yawRates;
@@ -47,5 +48,5 @@ for i = 1:length(ind)
     end
 end
 
-scatter(Sg(157:4110,2)*-1, Sg(157:4110,1), 2, 'fill');
+scatter(Sg(41:end,1), Sg(41:end,2), 2, 'fill');
 %scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1);
