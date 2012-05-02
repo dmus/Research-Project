@@ -1,36 +1,9 @@
-function [velocityError, angularRateError] = testPerformance(model, H, testrun)
+function [velocityError, angularRateError] = testPerformance(model, H, S, U, times)
 %TESTPERFORMANCE Tests performance of an acceleration model on a testrun.
 %   TESTPERFORMANCE measures average squared prediction errors between true
 %   state and simulated state. The test data in TESTRUN is split into
 %   consecutive non-overlapping windows which corresponds to H simulation
 %   steps.
-
-    T = load(testrun);
-    
-    % Remove states and actions before start signal
-    States = T.States(T.States(:,2) >= 0,:);
-    Actions = T.Actions(T.States(:,2) >= 0,:);
-
-    % Compute states
-    S(:,1) = States(:,47) * 1000 / 3600;
-    S(:,2) = States(:,48) * 1000 / 3600;
-    S(:,3) = estimateYawRate(States);
-
-    % Controls
-    speedControl = Actions(:,1) + -1 * Actions(:,2);
-    U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
-
-    times = States(:,2) - circshift(States(:,2),1);
-    times(1) = 0;
-
-    % Find resets for current lap time
-    resets = find(times < 0);
-    for i = 1:length(resets)
-        ind = resets(i);
-        times(ind) = States(ind,8) - States(ind-1,2) + States(ind,2);
-    end
-
-    times = cumsum(times);
     
     % States are divided in non-overlapping windows
     numWindows = 0;
