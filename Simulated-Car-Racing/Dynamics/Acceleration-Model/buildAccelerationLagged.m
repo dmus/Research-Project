@@ -24,13 +24,16 @@ function model = buildAccelerationLagged(S, U, times, H)
         
         fprintf('Simulation error: %f\n', error);
         
-        % 3. Solve 3 least-squares problem
+        % 3. Solve 3 least-squares problems
         disp('3. Solving least-squares');
         
+        numStateFeatures = 6;
+        numInputFeatures = 7;
+
         % Construct datasets
-        Xx = zeros((T - H) * H, 7);
-        Xy = zeros((T - H) * H, 7);
-        Xomega = zeros((T - H) * H, 7);
+        X_x = zeros((T - H) * H, numStateFeatures+numInputFeatures);
+        X_y = zeros((T - H) * H, numStateFeatures+numInputFeatures);
+        X_omega = zeros((T - H) * H, numStateFeatures+numInputFeatures);
         Y = zeros((T - H) * H, 3);
 
         % Start with filling the first row, k=1
@@ -38,9 +41,9 @@ function model = buildAccelerationLagged(S, U, times, H)
         for t = 1:T-H
             for h = 1:H
                 y = zeros(1,3);
-                xx = zeros(1,6);
-                xy = zeros(1,6);
-                xomega = zeros(1,6);
+                x_x = zeros(1,numStateFeatures+numInputFeatures);
+                x_y = zeros(1,numStateFeatures+numInputFeatures);
+                x_omega = zeros(1,numStateFeatures+numInputFeatures);
                 
                 % Angle made so far in current simulation
                 yaw = 0;
@@ -59,9 +62,13 @@ function model = buildAccelerationLagged(S, U, times, H)
                         s = S(t,:);
                     end   
 
-                    xx = xx + ([s U(t+tau,:)] * R(1,1) + [s U(t+tau,:)] * R(1,2)) * dt;
-                    xy = xy + ([s U(t+tau,:)] * R(2,1) + [s U(t+tau,:)] * R(2,2)) * dt;
-                    xomega = xomega + ([s U(t+tau,:)]) * dt;
+                    % Rotate and scale state and input features
+                    sf = mapStates(s);
+                    uf = mapInputs(U(t+tau,:),s);
+
+                    x_x = x_x + ([sf uf] * R(1,1) + [sf uf] * R(1,2)) * dt;
+                    x_y = x_y + ([sf uf] * R(2,1) + [sf uf] * R(2,2)) * dt;
+                    x_omega = x_omega + ([sf uf]) * dt;
                     
                     y(1:2) = y(1:2) + (R * Accelerations(t+tau,1:2)')' * dt;
                     y(3) = y(3) + Accelerations(t+tau,3);
@@ -71,9 +78,9 @@ function model = buildAccelerationLagged(S, U, times, H)
                 end
                 
                 % Put in datasets
-                Xx(k,:) = xx;
-                Xy(k,:) = xy;
-                Xomega(k,:) = xomega;
+                X_x(k,:) = x_x;
+                X_y(k,:) = x_y;
+                X_omega(k,:) = x_omega;
                 Y(k,:) = y;
                 k = k + 1;
             end
@@ -86,19 +93,21 @@ function model = buildAccelerationLagged(S, U, times, H)
         Brot = zeros(size(model{i}.Brot));
         
         % Exclude steering command
-        Xx(:,5) = 0;
-        theta = linearRegression(Xx,Y(:,1));
+        X_x(:,[2 3 4 9:end]) = 0;
+        theta = linearRegression(X_x,Y(:,1));
         
-        Apos(1,:) = theta(1:3);
-        Bpos(1,:) = theta(4:6);
+        Apos(1,:) = theta(1:numStateFeatures);
+        Bpos(1,:) = theta(numStateFeatures+1:end);
         
-        theta = linearRegression(Xy,Y(:,2));
-        Apos(2,:) = theta(1:3);
-        Bpos(2,:) = theta(4:6);
+        X_y(:,[1 4:6 7 8 12 13]) = 0;
+        theta = linearRegression(X_y,Y(:,2));
+        Apos(2,:) = theta(1:numStateFeatures);
+        Bpos(2,:) = theta(numStateFeatures+1:end);
         
-        theta = linearRegression(Xomega,Y(:,3));
-        Arot(1,:) = theta(1:3);
-        Brot(1,:) = theta(4:6);
+        X_omega(:,[1 2 5 6 7 8 10 11]) = 0;
+        theta = linearRegression(X_omega,Y(:,3));
+        Arot(1,:) = theta(1:numStateFeatures);
+        Brot(1,:) = theta(numStateFeatures+1:end);
         
         % 4. Update A,B
         disp('4. Updating model');
