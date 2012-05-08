@@ -13,9 +13,13 @@ function [Predictions, error] = simulate(model, H, S, U, times)
             s = S(t,:)';
             for tau=0:h-1
                 % Predict acceleration
+
+                sf = mapStates(s')';
+                uf = mapInputs(U(t+tau,:)',s')';
+
                 accelerations = zeros(3,1);
-                accelerations(1:2) = model.Apos * s + model.Bpos * U(t+tau,:)';
-                accelerations(3) = model.Arot * s + model.Brot * U(t+tau,:)';
+                accelerations(1:2) = model.Apos * sf + model.Bpos * uf;
+                accelerations(3) = model.Arot * sf + model.Brot * uf;
 
                 yawrate = s(3);
                 R = [cos(yawrate) -sin(yawrate); sin(yawrate) cos(yawrate)];
