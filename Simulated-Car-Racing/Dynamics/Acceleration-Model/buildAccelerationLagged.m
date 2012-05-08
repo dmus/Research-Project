@@ -1,4 +1,4 @@
-function model = buildAccelerationLagged(trainrun, H)
+function model = buildAccelerationLagged(S, U, times, H)
 %BUILDACCELERATIONLAGGED Builds a dynamics model.
 %   BUILDACCELERATIONLAGGED buidls a acceleration-based dynamics model
 %   taking into account H simulation steps. However, the result is still a
@@ -7,7 +7,7 @@ function model = buildAccelerationLagged(trainrun, H)
     % 1. Minimize one-step squared prediction error to obtain initial model
     disp('1. Building initial model');
     
-    [initialModel, S, U, times, Accelerations] = buildAccelerationOneStep(trainrun);
+    [initialModel, Accelerations] = buildAccelerationOneStep(S, U, times);
     
     i = 1;
     epsilon = 0.1;

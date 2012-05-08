@@ -1,4 +1,4 @@
-function X = mapInputs(U)
+function X = mapInputs(U, S)
 %MAPINPUTS Summary of this function goes here
 %   Detailed explanation goes here
     acc = U(:,1);
@@ -7,6 +7,8 @@ function X = mapInputs(U)
     brake = -U(:,1);
     brake(brake < 0) = 0;
 
-    X = [acc brake sqrt(acc) sqrt(brake) acc.^2 brake.^2 acc.^3 brake.^3 U(:,3)];
+    steer = U(:,2);
+    
+    X = [acc brake steer acc.*S(:,2) brake.*S(:,2) acc.*S(:,3) brake.*S(:,3)];
 end
 

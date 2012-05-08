@@ -27,7 +27,7 @@ times = computeDiscretizedTimes(States);
 % speedControl = Actions(:,1) + -1 * Actions(:,2);
 % U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
 load('trainingsdata.mat');
-model = buildAccelerationOneStep(S(window,:), U(window,:), times);
+[model, Accelerations] = buildAccelerationOneStep(S, U, times);
 
 T = load(testrun);
 
@@ -38,14 +38,12 @@ Actions = T.Actions(T.States(:,2) >= 0,:);
 % Compute time differences
 times = computeDiscretizedTimes(States);
 
-S_test(:,1) = States(:,47) * 1000 / 3600;
-S_test(:,2) = States(:,48) * 1000 / 3600;
-S_test(:,3) = findYawRates(States);
-
-speedControl = Actions(:,1) + -1 * Actions(:,2);
-U_test = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
-
-% Compute time differences
-times = computeDiscretizedTimes(States);
+% S_test(:,1) = States(:,47) * 1000 / 3600;
+% S_test(:,2) = States(:,48) * 1000 / 3600;
+% S_test(:,3) = findYawRates(States);
+% 
+% speedControl = Actions(:,1) + -1 * Actions(:,2);
+% U_test = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
+load('testdata.mat');
 
 [velocityError, angularRateError] = testPerformance(model, H, S_test, U_test, times);

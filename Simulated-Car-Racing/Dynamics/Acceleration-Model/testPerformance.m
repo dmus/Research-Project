@@ -32,8 +32,8 @@ function [velocityError, angularRateError] = testPerformance(model, H, S, U, tim
                 
                 % Predict acceleration at time t+tau
                 acc = zeros(3,1);
-                acc(1:2) = model.Apos * state + model.Bpos * U(t+tau,:)';
-                acc(3) = model.Arot * state + model.Brot * U(t+tau,:)';
+                acc(1:2) = model.Apos * mapStates(state')' + model.Bpos * mapInputs(U(t+tau,:),state')';
+                acc(3) = model.Arot * mapStates(state')' + model.Brot * mapInputs(U(t+tau,:),state')';
                 
                 % Compute state at time t+tau+1 with predicted
                 % accelerations

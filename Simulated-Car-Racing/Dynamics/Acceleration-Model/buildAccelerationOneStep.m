@@ -25,40 +25,47 @@ function [model, Accelerations] = buildAccelerationOneStep(S, U, times)
     end
 
     % We have 4 matrices for our acceleration-model
+    numStateFeatures = 6;
+    numInputFeatures = 7;
     
-    
-    Apos = zeros(2,5);
-    Bpos = zeros(2,9);
-    Arot = zeros(1,5);
-    Brot = zeros(1,9);
+    Apos = zeros(2,numStateFeatures);
+    Bpos = zeros(2,numInputFeatures);
+    Arot = zeros(1,numStateFeatures);
+    Brot = zeros(1,numInputFeatures);
 
+    X = [mapStates(S) mapInputs(U,S)];
+    X = X(1:end-1,:);
+    
     % Solve following linear least squares problems:
     % - Acceleration in x-direction, steering control not included
     
-    X = [mapStates(S) mapInputs(U)];
-    X = X(1:end-1,:);
-    
+    X_x = X;
+    X_x(:,[2 3 4 9:end]) = 0;
     y = Accelerations(:,1);
     
-    theta = linearRegression(X, y);
-    Apos(1,:) = theta(1:5);
-    Bpos(1,:) = theta(6:14);
+    theta = linearRegression(X_x, y);
+    Apos(1,:) = theta(1:numStateFeatures);
+    Bpos(1,:) = theta(numStateFeatures+1:end);
 
     % - Acceleration in y-direction
     %X = [S(:,2) S(:,2).^2 acc brake sqrt(acc) sqrt(brake) acc.^2 brake.^2
     %acc.^3 brake.^3 S(:,2) S(:,3) (S(:,2).*S(:,3)).^2 U(:,2) U(:,2).^3 U(:,3)];
-    y = Accelerations(:,2);
-    theta = linearRegression(X, y);
-    Apos(2,:) = theta(1:5);
-    Bpos(2,:) = theta(6:14);
+    X_y = X;
+    X_y(:,[1 4:6 7 8 12 13]) = 0;
+    
+    theta = linearRegression(X_y, y);
+    Apos(2,:) = theta(1:numStateFeatures);
+    Bpos(2,:) = theta(numStateFeatures+1:end);
 
     % - Acceleration in angular speed
     %X = [S(:,2) S(:,2).^2 acc brake sqrt(acc) sqrt(brake) acc.^2 brake.^2 acc.^3 brake.^3 S(:,2) S(:,3) (S(:,2).*S(:,3)).^2 U(:,2) U(:,2).^3 U(:,3)];
+    X_o = X;
+    X_o(:,[1 2 5 6 7 8 10 11]) = 0;
     
     y = Accelerations(:,3);
-    theta = linearRegression(X, y);
-    Arot(1,:) = theta(1:5);
-    Brot(1,:) = theta(6:14);
+    theta = linearRegression(X_o, y);
+    Arot(1,:) = theta(1:numStateFeatures);
+    Brot(1,:) = theta(numStateFeatures+1:end);
 
     % Ready, put into model
     model.Apos = Apos;

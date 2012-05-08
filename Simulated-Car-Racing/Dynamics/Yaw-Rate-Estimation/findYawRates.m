@@ -1,8 +1,8 @@
 function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 %FINDYAWRATE Summary of this function goes here
 %   Detailed explanation goes here
+    
     alpha = 0.815;
-    maxDistance = 30;
 
     S(:,1) = States(:,47) * 1000 / 3600;
     S(:,2) = States(:,48) * 1000 / 3600;
@@ -17,7 +17,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
     
     times = computeDiscretizedTimes(States);
 
-    t = 2906;%536;
+    t = 40;%536;
     yaw = 0;
     translation = [0 0];
     %for t = 536:566
@@ -28,17 +28,11 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
         indices = 1:19;
         angles = transp(((indices - 10) / 9) * (0.5*pi) * -1);
         ranges = States(t, indices + 49)';
-        
+
         Landmarks = [ranges .* cos(angles) ranges .* sin(angles)];
-        %Landmarks(ranges >= maxDistance,:) = [];
-        
-%         diff_y = abs(Landmarks(1:end-1,2) - Landmarks(2:end,2));
-%         [maxVal, indMax] = max(diff_y);
 
         [LandmarksLeft, LandmarksRight] = groupRangeFinders(Landmarks, 10);
-%         LandmarksLeft = Landmarks(1:indMax,:);
-%         LandmarksRight = flipud(Landmarks(indMax+1:end,:));
-        
+
         % Compute move
         dt = times(t+1) - times(t);
         pos = [0 0];
@@ -46,81 +40,59 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 
         % Range finder points
         newRanges = States(t+1, indices + 49)';
-        
+
         Points = [newRanges .* cos(angles) newRanges .* sin(angles)];
         [PointsLeft, PointsRight] = groupRangeFinders(Points, 10);
-        %Points(newRanges >= maxDistance,:) = [];
         
-%         % Interpolate extra landmarks
-%         LandmarksLeftX = zeros(size(LandmarksLeft, 1) * 2 - 1, 2);
-%         LandmarksRightX = zeros(size(LandmarksRight, 1) * 2 - 1, 2);
-% 
-%         % Left
-%         odd = mod(1:size(LandmarksLeftX,1), 2) == 1;
-%         even = mod(1:size(LandmarksLeftX,1), 2) == 0;
-%         
-%         LandmarksLeftX(odd,:) = LandmarksLeft;
-%         LandmarksLeftX(even,:) = (LandmarksLeft(1:end-1,:) + LandmarksLeft(2:end,:)) / 2;
-%         
-%         % Smoothing, odd indices are fixed
-%         fixed = mod(1:size(LandmarksLeftX,1), 2) == 1;
-%         %LandmarksLeftX = smoothCurve(LandmarksLeftX, fixed, 0.1);
-% 
-%         % Same for right
-%         odd = mod(1:size(LandmarksRightX,1), 2) == 1;
-%         even = mod(1:size(LandmarksRightX,1), 2) == 0;
-%         
-%         LandmarksRightX(odd,:) = LandmarksRight;
-%         LandmarksRightX(even,:) = (LandmarksRight(1:end-1,:) + LandmarksRight(2:end,:)) / 2;
-%         
-%         % Smoothing, odd indices are fixed
-%         fixed = mod(1:size(LandmarksRightX,1), 2) == 1;
-%         %LandmarksRightX = smoothCurve(LandmarksRightX, fixed, 0.1);  
-%         
+        % Check if last step before finish
+        if States(t+1,4) < States(t,4)-100
+            yawrate = 0; % No better estimation available
+        else
+            % Localization
+            % Search for right yawrate
+            yawrate = 0;%0.0145
+            delta = 0.001;
 
-        
-        % Localization
-        % Search for right yawrate
-        yawrate = 0;%0.0145
-        delta = 0.001;
+            epsilon = 0.00001;
+            bestError = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
 
-        epsilon = 0.00001;
-        bestError = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
+            % Coordinate descent search
+            while delta > epsilon
+                yawrate = yawrate + delta;
 
-        % Coordinate descent search
-        while delta > epsilon
-            yawrate = yawrate + delta;
-
-            % Try with greater value
-            error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
-
-            if error < bestError
-                bestError = error;
-                delta = delta * 1.1;
-            else
-                % If no success true smaller value
-                yawrate = yawrate - (2 * delta);
+                % Try with greater value
                 error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
+
                 if error < bestError
                     bestError = error;
                     delta = delta * 1.1;
                 else
-                    % If no success, reset yawrate and try with smaller steps next
-                    % time
-                    yawrate = yawrate + delta;
-                    delta = delta * 0.9;
+                    % If no success true smaller value
+                    yawrate = yawrate - (2 * delta);
+                    error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
+                    if error < bestError
+                        bestError = error;
+                        delta = delta * 1.1;
+                    else
+                        % If no success, reset yawrate and try with smaller steps next
+                        % time
+                        yawrate = yawrate + delta;
+                        delta = delta * 0.9;
+                    end
                 end
             end
+
+            yawrate = yawrate * alpha;
         end
+
+%             R = [cos(yawrate) -sin(yawrate); sin(yawrate) cos(yawrate)];
+%             %ResultingPoints = (R * bsxfun(@plus, Points, move)')';
+%             ResultingPoints = bsxfun(@plus, R *[PointsLeft;PointsRight]', move')';
+%             figure(1);
+%             plotScans([LandmarksLeft;LandmarksRight], ResultingPoints, pos, move);
         
         
-%         R = [cos(yawrate) -sin(yawrate); sin(yawrate) cos(yawrate)];
-%         %ResultingPoints = (R * bsxfun(@plus, Points, move)')';
-%         ResultingPoints = bsxfun(@plus, R *Points', move')';
-%         figure(1);
-%         plotScans([LandmarksLeft;LandmarksRight], ResultingPoints, pos, move);
-%         
-        yawrate = yawrate * alpha;
+        
         yawRates(t) = yawrate / dt;
         
         R = [cos(yaw) -sin(yaw); sin(yaw) cos(yaw)];
