@@ -37,7 +37,8 @@ function [velocityError, angularRateError] = testPerformance(model, H, S, U, tim
                 
                 % Compute state at time t+tau+1 with predicted
                 % accelerations
-                R = [cos(state(3)) -sin(state(3)); sin(state(3)) cos(state(3))];
+                a = state(3) * dt;
+                R = [cos(a) -sin(a); sin(a) cos(a)];
                 state(1:2) = R * (state(1:2) + acc(1:2) * dt);
                 state(3) = state(3) + acc(3) * dt;
             end
