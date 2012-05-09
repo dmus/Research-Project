@@ -15,7 +15,7 @@ function [model, Accelerations] = buildAccelerationOneStep(S, U, times)
         dt = times(t+1) - times(t);
 
         % Rotate velocity at time t+1 back into the body frame at time t
-        yawrate = S(t,3);
+        yawrate = S(t,3) * dt;
         R = [cos(-yawrate) -sin(-yawrate);sin(-yawrate) cos(-yawrate)];
         speedsBackRotated = R * S(t+1,1:2)';
         Accelerations(t,1:2) = (speedsBackRotated' - S(t,1:2)) / dt;

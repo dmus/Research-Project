@@ -22,10 +22,12 @@ function [Predictions, error] = simulate(model, H, S, U, times)
                 accelerations(3) = model.Arot * sf + model.Brot * uf;
 
                 yawrate = s(3);
-                R = [cos(yawrate) -sin(yawrate); sin(yawrate) cos(yawrate)];
+                dt = times(t+tau+1) - times(t+tau);
+                a = yawrate * dt;
+                R = [cos(a) -sin(a); sin(a) cos(a)];
 
                 % Compute new state
-                dt = times(t+tau+1) - times(t+tau);
+                
                 s(1:2) = R * (s(1:2) + accelerations(1:2) * dt);
                 s(3) = s(3) + accelerations(3) * dt;
             end

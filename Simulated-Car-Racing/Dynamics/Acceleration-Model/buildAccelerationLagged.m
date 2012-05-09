@@ -74,7 +74,7 @@ function model = buildAccelerationLagged(S, U, times, H)
                     y(3) = y(3) + Accelerations(t+tau,3);
                     
                     % Update angle made so far
-                    yaw = yaw + s(3);
+                    yaw = yaw + s(3) * dt;
                 end
                 
                 % Put in datasets

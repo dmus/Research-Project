@@ -23,7 +23,7 @@ for t = 1:size(S_temp,1) - 1
     dt = times(t+1) - times(t);
 
     % Rotate velocity at time t+1 back into the body frame at time t
-    yawrate = S_temp(t,3);
+    yawrate = S_temp(t,3)*dt;
     R = [cos(-yawrate) -sin(-yawrate);sin(-yawrate) cos(-yawrate)];
     speedsBackRotated = R * S_temp(t+1,1:2)';
     Accelerations(t,1:2) = (speedsBackRotated' - S_temp(t,1:2)) / dt;
@@ -31,6 +31,16 @@ for t = 1:size(S_temp,1) - 1
     % Also angular acceleration
     Accelerations(t,3) = (S(t+1,3) - S(t,3)) / dt;
 end
+
+% for t = 1:size(S_temp,1) - 1
+%     dt = times(t+1) - times(t);
+%     
+%     angle = S_temp(t,3)*dt;
+%     R = [cos(angle) -sin(angle);sin(angle) cos(angle)];
+%     
+%     px = R * (S_temp(t,1:2) + Accelerations(t,1:2)*dt)';
+%     [px S_temp(t+1,1:2)']
+% end
 
 Sg = [zeros(size(S(window,:),1), 3) S(window,:)];
 for t = 2:size(S_temp,1)
@@ -74,7 +84,8 @@ for t = 2:50
     
     P(t, 1:3) = [x_new y_new yaw_new];
     
-    R = [cos(yawRate) -sin(yawRate); sin(yawRate) cos(yawRate)];
+    a = yawRate * dt;
+    R = [cos(a) -sin(a); sin(a) cos(a)];
     P(t, 4:5) = transp(R * ([speedX;speedY] + dt * acc(1:2)));
     P(t,6) = yawRate + acc(3)*dt;
 end
