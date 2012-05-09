@@ -28,6 +28,7 @@ times = computeDiscretizedTimes(States);
 % U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
 load('trainingsdata.mat');
 [model, Accelerations] = buildAccelerationOneStep(S, U, times);
+% model = buildAccelerationLagged(S, U, times, H);
 
 T = load(testrun);
 

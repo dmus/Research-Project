@@ -15,7 +15,7 @@ function [Predictions, error] = simulate(model, H, S, U, times)
                 % Predict acceleration
 
                 sf = mapStates(s')';
-                uf = mapInputs(U(t+tau,:)',s')';
+                uf = mapInputs(U(t+tau,:),s')';
 
                 accelerations = zeros(3,1);
                 accelerations(1:2) = model.Apos * sf + model.Bpos * uf;
