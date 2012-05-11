@@ -5,7 +5,7 @@ trainingsrun = 'Wheel-2_MrRacer.mat';
 testrun = 'E-Track-2_MrRacer.mat';
 
 % Number of steps to simulate
-H = 10;
+H = 25;
 window = 1:1000;
 T = load(trainingsrun);
 
@@ -27,8 +27,9 @@ times = computeDiscretizedTimes(States);
 % speedControl = Actions(:,1) + -1 * Actions(:,2);
 % U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
 load('trainingsdata.mat');
-[model, Accelerations] = buildAccelerationOneStep(S, U, times);
-%model = buildAccelerationLagged(S, U, times, H);
+% [model, Accelerations] = buildAccelerationOneStep(S, U, times);
+models = buildAccelerationLagged(S, U, times, H);
+model = models{length(models)};
 
 T = load(testrun);
 
@@ -47,4 +48,4 @@ times = computeDiscretizedTimes(States);
 % U_test = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
 load('testdata.mat');
 
-[velocityError, angularRateError] = testPerformance(model, H, S_test, U_test, times);
+error = testPerformance(model, H, S_test, U_test, times);

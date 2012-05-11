@@ -9,6 +9,6 @@ function X = mapInputs(U, S)
 
     steer = U(:,2);
     
-    X = [acc brake steer acc.*S(:,2) brake.*S(:,2) acc.*S(:,3) brake.*S(:,3)];
+    X = [acc brake steer acc.*S(:,2) brake.*S(:,2) acc.*S(:,3) brake.*S(:,3) U(:,3)];
 end
 

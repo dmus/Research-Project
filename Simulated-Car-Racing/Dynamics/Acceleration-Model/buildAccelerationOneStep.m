@@ -26,7 +26,7 @@ function [model, Accelerations] = buildAccelerationOneStep(S, U, times)
 
     % We have 4 matrices for our acceleration-model
     numStateFeatures = 6;
-    numInputFeatures = 7;
+    numInputFeatures = 8;
     
     Apos = zeros(2,numStateFeatures);
     Bpos = zeros(2,numInputFeatures);

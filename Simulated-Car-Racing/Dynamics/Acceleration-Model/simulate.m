@@ -9,28 +9,28 @@ function [Predictions, error] = simulate(model, H, S, U, times)
 
     for t = 1:T-H
         for h = 1:H
-            % Predict s at time t+h given s at time t
-            s = S(t,:)';
-            for tau=0:h-1
-                % Predict acceleration
-
-                sf = mapStates(s')';
-                uf = mapInputs(U(t+tau,:),s')';
-
-                accelerations = zeros(3,1);
-                accelerations(1:2) = model.Apos * sf + model.Bpos * uf;
-                accelerations(3) = model.Arot * sf + model.Brot * uf;
-
-                yawrate = s(3);
-                dt = times(t+tau+1) - times(t+tau);
-                a = yawrate * dt;
-                R = [cos(a) -sin(a); sin(a) cos(a)];
-
-                % Compute new state
-                
-                s(1:2) = R * (s(1:2) + accelerations(1:2) * dt);
-                s(3) = s(3) + accelerations(3) * dt;
+            if h == 1
+                s = S(t,:)';
+            else
+                s = Predictions(t,h-1,:);
+                s = s(:);
             end
+            
+            sf = mapStates(s')';
+            uf = mapInputs(U(t+h-1,:),s')';
+            
+            accelerations = zeros(3,1);
+            accelerations(1:2) = model.Apos * sf + model.Bpos * uf;
+            accelerations(3) = model.Arot * sf + model.Brot * uf;
+
+            yawrate = s(3);
+            dt = times(t+h) - times(t+h-1);
+            a = yawrate * dt;
+            R = [cos(a) -sin(a); sin(a) cos(a)];
+
+            % Compute new state
+            s(1:2) = R * (s(1:2) + accelerations(1:2) * dt);
+            s(3) = s(3) + accelerations(3) * dt;
 
             % Store prediction
             Predictions(t,h,:) = s;

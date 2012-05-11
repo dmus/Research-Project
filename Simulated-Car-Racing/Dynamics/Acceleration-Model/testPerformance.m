@@ -1,4 +1,4 @@
-function [velocityError, angularRateError] = testPerformance(model, H, S, U, times)
+function error = testPerformance(model, H, S, U, times)
 %TESTPERFORMANCE Tests performance of an acceleration model on a testrun.
 %   TESTPERFORMANCE measures average squared prediction errors between true
 %   state and simulated state. The test data in TESTRUN is split into
@@ -9,8 +9,9 @@ function [velocityError, angularRateError] = testPerformance(model, H, S, U, tim
     numWindows = 0;
     
     % Errors for each simulation step
-    velocityError = zeros(1,H);
-    angularRateError = zeros(1,H);
+    error.x = zeros(1,H);
+    error.y = zeros(1,H);
+    error.omega = zeros(1,H);
     
     % Start at first state, stop if no window of H timesteps is left
     t = 1;
@@ -44,8 +45,9 @@ function [velocityError, angularRateError] = testPerformance(model, H, S, U, tim
             end
             predicted = state;
             
-            velocityError(h) = velocityError(h) + sum((truth(1:2) - predicted(1:2)) .^2);
-            angularRateError(h) = angularRateError(h) + sum((truth(3) - predicted(3)) .^2);
+            error.x(h) = error.x(h) + sum((truth(1) - predicted(1)) .^2);
+            error.y(h) = error.y(h) + sum((truth(2) - predicted(2)) .^2);
+            error.omega(h) = error.omega(h) + sum((truth(3) - predicted(3)) .^2);
         end
         
         numWindows = numWindows + 1;
@@ -55,7 +57,8 @@ function [velocityError, angularRateError] = testPerformance(model, H, S, U, tim
     end
     
     % Compute error means
-    velocityError = velocityError ./ numWindows;
-    angularRateError = angularRateError ./ numWindows;
+    error.x = error.x ./ numWindows;
+    error.y = error.y ./ numWindows;
+    error.omega = error.omega ./ numWindows;
 end
 

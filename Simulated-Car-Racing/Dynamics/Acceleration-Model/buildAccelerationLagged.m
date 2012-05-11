@@ -28,7 +28,7 @@ function model = buildAccelerationLagged(S, U, times, H)
         disp('3. Solving least-squares');
         
         numStateFeatures = 6;
-        numInputFeatures = 7;
+        numInputFeatures = 8;
 
         % Construct datasets
         X_x = zeros((T - H) * H, numStateFeatures+numInputFeatures);
@@ -71,7 +71,7 @@ function model = buildAccelerationLagged(S, U, times, H)
                     x_omega = x_omega + ([sf uf]) * dt;
                     
                     y(1:2) = y(1:2) + (R * Accelerations(t+tau,1:2)')' * dt;
-                    y(3) = y(3) + Accelerations(t+tau,3);
+                    y(3) = y(3) + Accelerations(t+tau,3) * dt;
                     
                     % Update angle made so far
                     yaw = yaw + s(3) * dt;
@@ -123,21 +123,29 @@ function model = buildAccelerationLagged(S, U, times, H)
             temp.Brot = (1-alpha) * model{i}.Brot + alpha * Brot;
             
             [~, error] = simulate(temp, H, S, U, times);
+            fprintf('Simulation error: %f\n', error);
             
             if error < cost{i}
                 improved = true;
             else
                 alpha = 0.5 * alpha;
+                if alpha <= 1/2^20
+                    break;
+                end
             end
         end
 
         fprintf('Stepsize alpha: %f\n', alpha);
         
-        model{i+1}.Apos = temp.Apos;
-        model{i+1}.Bpos = temp.Bpos;
-        model{i+1}.Arot = temp.Arot;
-        model{i+1}.Brot = temp.Brot;
-        
+        if improved
+            model{i+1}.Apos = temp.Apos;
+            model{i+1}.Bpos = temp.Bpos;
+            model{i+1}.Arot = temp.Arot;
+            model{i+1}.Brot = temp.Brot;
+        else
+            model{i+1} = model{i};
+        end
+            
         % 5. Check if converged
         disp('5. Check stop condition');
         

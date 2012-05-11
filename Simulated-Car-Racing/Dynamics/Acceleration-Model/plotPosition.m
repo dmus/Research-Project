@@ -1,7 +1,7 @@
 trainingsrun = 'Wheel-2_MrRacer.mat';
 testrun = 'E-Track-2_MrRacer.mat';
 
-window = 600:650;
+window = 1050:2000;
 
 % Number of steps to simulate
 T = load(trainingsrun);
@@ -63,7 +63,7 @@ end
 
 P = zeros(100, 6);
 P(1,:) = Sg(1,:);
-for t = 2:50
+for t = 2:100
     prev = P(t-1,:);
     x = prev(1);
     y = prev(2);
