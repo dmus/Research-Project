@@ -129,7 +129,7 @@ function model = buildAccelerationLagged(S, U, times, H)
                 improved = true;
             else
                 alpha = 0.5 * alpha;
-                if alpha <= 1/2^20
+                if alpha <= 1/2^15
                     break;
                 end
             end

@@ -17,7 +17,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
     
     times = computeDiscretizedTimes(States);
 
-    t = 40;%536;
+    t = 18139;%40;%536;
     yaw = 0;
     translation = [0 0];
     %for t = 536:566
@@ -85,12 +85,13 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
             yawrate = yawrate * alpha;
         end
 
+        
 %             R = [cos(yawrate) -sin(yawrate); sin(yawrate) cos(yawrate)];
 %             %ResultingPoints = (R * bsxfun(@plus, Points, move)')';
 %             ResultingPoints = bsxfun(@plus, R *[PointsLeft;PointsRight]', move')';
 %             figure(1);
 %             plotScans([LandmarksLeft;LandmarksRight], ResultingPoints, pos, move);
-        
+%         
         
         
         yawRates(t) = yawrate / dt;
