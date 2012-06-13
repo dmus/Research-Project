@@ -11,3 +11,17 @@ function [K, P] = lqr_time_varying_controller(A, B, Q, R, Qfinal)
 % K{k}, k=1,2,...,T : feedback control for k time steps to-go if in state x equals K{k}*x
 % P{k}, k=1,2,...,T : cost-to-go for k time steps to-go if in state x equals x'*P{k}*x
 
+P_current = Qfinal;
+t = length(A);
+for k = 1:length(A)
+    K_new = -(R + B{t}' * P_current * B{t})^-1 * B{t}' * P_current * A{t};
+    P_new = Q + K_new' * R * K_new + (A{t} + B{t} * K_new)' * P_current * (A{t} + B{t} * K_new);
+    
+    K_current = K_new;
+    P_current = P_new;
+    
+    K{k} = K_current;
+    P{k} = P_current;
+    
+    t = t-1;
+end

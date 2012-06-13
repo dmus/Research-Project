@@ -70,7 +70,7 @@ n_starting_states = size(heli_starting_states,2);
 for s=1:n_starting_states
 	x(:,1) = heli_starting_states(:,s);
 	for t=1:T
-		u(:,t) = %% YOURS to fill in
+		u(:,t) = ( K_inf * ( x(:,t) - x_ref ) ) + u_ref;%% YOURS to fill in
 		x(:,t+1) = f(x(:,t), u(:,t), dt) + p1_c_w(:,t);
 	end
 		
