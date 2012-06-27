@@ -17,10 +17,10 @@ x_eps = my_eps;
 u_eps = my_eps;
 
 for i = 1:length(x_ref)
-	x_plus = x_ref;
+	x_plus = x_ref_next;
 	x_plus(i) = x_plus(i) + x_eps;
 	x1_plus = f(x_plus, u_ref, dt);
-	x_minus = x_ref;
+	x_minus = x_ref_next;
 	x_minus(i) = x_minus(i) - x_eps;
 	x1_minus = f(x_minus, u_ref, dt);
 	A(:,i) = (x1_plus - x1_minus) / (2*x_eps);
@@ -36,4 +36,4 @@ for i = 1:length(u_ref)
 	B(:,i) = (x1_plus - x1_minus) / (2*u_eps);
 end
 
-c = f(x_ref,u_ref,dt);
+c = f(x_ref_next,u_ref,dt);
