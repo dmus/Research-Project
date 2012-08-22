@@ -42,6 +42,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
         newRanges = States(t+1, indices + 49)';
 
         Points = [newRanges .* cos(angles) newRanges .* sin(angles)];
+        
         [PointsLeft, PointsRight] = groupRangeFinders(Points, 10);
         
         % Check if last step before finish

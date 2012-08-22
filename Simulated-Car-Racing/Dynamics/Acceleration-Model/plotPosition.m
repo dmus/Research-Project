@@ -91,4 +91,4 @@ for t = 2:25
 end
 
 C = [repmat([1 0 0], size(Sg,1), 1); repmat([0 0 1], size(P,1), 1)];
-scatter([Sg(:,1); P(:,1)], [Sg(:,2); P(:,2)], 5, C, 'fill');
+scatter([Sg(:,1); P(:,1)], [Sg(:,2); P(:,2)], 5, C, 'fill')
