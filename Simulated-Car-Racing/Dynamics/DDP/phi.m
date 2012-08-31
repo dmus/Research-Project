@@ -26,11 +26,6 @@ function f = phi(s, map, ref)
     distance_to_p1 = ref(1) - map(prev_index,1);
     distance_to_p2 = map(index,1) - ref(1);
     
-    temp = [distance_to_p1 * cos(alpha + pi); distance_to_p1 * sin(alpha + pi)];
-    if sum(size(track) ~= size(temp)) > 0
-        disp('error');
-    end
-    
     p1 = track + [distance_to_p1 * cos(alpha + pi); distance_to_p1 * sin(alpha + pi)];
     p2 = track + [distance_to_p2 * cos(alpha); distance_to_p2 * sin(alpha)];
     
@@ -63,8 +58,6 @@ function f = phi(s, map, ref)
     f = zeros(1,3);
     
     % Distance from track axis
-    % ERROR
-    % sqrt(sum(r.^2) - (r' * dp).^2)
     relative_cte = (r(2) * dp(1) - r(1) * dp(2)) / (dp' * dp);
     absolute_cte = relative_cte * sqrt(dp' * dp);
     f(3) = absolute_cte / (0.5 * trackWidth);
@@ -73,6 +66,7 @@ function f = phi(s, map, ref)
     f(2) = s(3) - (alpha + u * map(prev_index,3));
     
     % Distance to go along track axis
+    %f(1) = map(prev_index,1) + u * (map(index,1) - map(prev_index,2));
     f(1) = map(prev_index,1) + u * map(prev_index,2);
 end
 

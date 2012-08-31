@@ -18,5 +18,10 @@ for t = 1:size(U,1)-1
     % Compute squared error
     error = (Laps{2}.S(t+1,[4 1 69]) - features) .^ 2;
     
+    disp('result:');
+    
+    Laps{2}.S(t+1,[4 1 69])
+    features
+    
     total_error = total_error + error;
 end
