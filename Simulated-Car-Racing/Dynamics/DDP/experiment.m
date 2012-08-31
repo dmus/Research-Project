@@ -13,15 +13,11 @@ for t = 1:size(U,1)-1
     s_new = f(s,u,dt);
 
     ref = Laps{2}.S(t,[4 1 69]);
-    features = phi(s_new, Map, ref);
+    p = s(4:6) * dt;
+    features = phi(p, Map, ref);
     
     % Compute squared error
     error = (Laps{2}.S(t+1,[4 1 69]) - features) .^ 2;
-    
-    disp('result:');
-    
-    Laps{2}.S(t+1,[4 1 69])
-    features
     
     total_error = total_error + error;
 end
