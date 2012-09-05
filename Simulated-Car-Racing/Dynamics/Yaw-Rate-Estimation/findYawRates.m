@@ -2,6 +2,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 %FINDYAWRATE Summary of this function goes here
 %   Detailed explanation goes here
     
+    % Compensation parameter 
     alpha = 0.815;
 
     S(:,1) = States(:,47) * 1000 / 3600;

@@ -4,6 +4,8 @@ function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, P
     error = 0;
     
     R = [cos(angle) -sin(angle); sin(angle) cos(angle)];
+    
+    % Rotate new points around origin and add translation
     PointsLeft = bsxfun(@plus, R*PointsLeft', move')';
     PointsRight = bsxfun(@plus, R*PointsRight', move')';
     %ResultingPoints = (R * bsxfun(@plus, Ranges, move)')';
@@ -38,6 +40,9 @@ function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, P
         
         cte = (Ry * dx - Rx * dy) / normalizer;
         
+        % CTE is relative, now compute absolute error
+        cte = cte * sqrt([dx dy] * [dx; dy]);
+        
         error = error + cte^2;
     end
     
@@ -70,6 +75,10 @@ function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, P
         end
         
         cte = (Ry * dx - Rx * dy) / normalizer;
+        
+        % CTE is relative, now compute absolute error
+        cte = cte * sqrt([dx dy] * [dx; dy]);
+        
         
         error = error + cte^2;
     end

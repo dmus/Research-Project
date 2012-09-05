@@ -20,7 +20,7 @@ S(:,2) = States(:,48) * 1000 / 3600;
 S(:,3) = yawRates;
 
 % Compute world coordinates
-Sg = [zeros(size(S,1), 3) S];
+Sg = [zeros(size(S,1), 3) S(:,4:6)];
 for t = 2:size(S,1)
     prev = Sg(t-1,:);
     x = prev(1);

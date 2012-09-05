@@ -12,7 +12,10 @@ for t = 1:size(U,1)-1
     u = U(t,:)';
     s_new = f(s,u,dt);
 
+    % Position of origin relative to track axis
     ref = Laps{2}.S(t,[4 1 69]);
+    
+    % Position + orientation relative to origin
     p = s(4:6) * dt;
     features = phi(p, Map, ref);
     
