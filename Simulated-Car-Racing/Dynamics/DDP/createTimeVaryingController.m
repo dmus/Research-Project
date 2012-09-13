@@ -16,6 +16,12 @@ function [K, P] = createTimeVaryingController(A, B, Q, R, Qfinal)
 P_current = Qfinal;
 t = length(A);
 for k = 1:length(A)
+    try
+        test = -(R + B{t}' * P_current * B{t})^-1 * B{t}' * P_current * A{t};
+    catch e
+        disp('error');
+    end
+    
     K_new = -(R + B{t}' * P_current * B{t})^-1 * B{t}' * P_current * A{t};
     P_new = Q + K_new' * R * K_new + (A{t} + B{t} * K_new)' * P_current * (A{t} + B{t} * K_new);
     
