@@ -1,4 +1,4 @@
-function [A, B, c] = linearizeDynamics(f, x_ref, u_ref, dt, my_eps, x_ref_tplus1)
+function [A, B, c] = linearizeDynamics(f, x_ref, u_ref, dt, my_eps, x_ref_next)
 
 % meaning: x(:,t+1) - x_ref_tplus1  to-first-order-equal-to A*( x(:,t)-x_ref ) + B* ( u(:,t) - u_ref ) + c
 %  if we pick an equilibrium x_ref and u_ref, then x_ref = f(x_ref, u_ref),
@@ -6,12 +6,6 @@ function [A, B, c] = linearizeDynamics(f, x_ref, u_ref, dt, my_eps, x_ref_tplus1
 %  to be passed in; for question 1 this is the case, but for later
 %  questions you'll also need x_ref_tplus1 (when trajectory stabilizing
 %  with LQ control)
-
-if(nargin == 6)
-	x_ref_next = x_ref_tplus1;
-else
-	x_ref_next = x_ref;
-end
 
 x_eps = my_eps;
 u_eps = my_eps;
