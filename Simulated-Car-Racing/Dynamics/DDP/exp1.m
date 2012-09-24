@@ -2,7 +2,7 @@
 
 init;
 
-H = 20; % Corresponding to 5 seconds
+H = 20; % Horizon, corresponding to 5 seconds
 
 S = computeStateRepresentation(Laps{2}.S(1:H+1,:));
 U = computeActionRepresentation(Laps{2}.A(1:H+1,:));
@@ -24,20 +24,12 @@ for i = 1:10
         A{t} = [A{t} c{t}; zeros(1, size(A{t},2)) 1];
         B{t} = [B{t}; zeros(1,size(B{t},2))];
 
+        [Q{t}, R{t}] = quadratizeCosts(@g, @h, x_ref, u_ref, my_eps);
 
         % x(:,t+1) - x_ref_tplus1  to-first-order-equal-to A*( x(:,t)-x_ref ) +
         % B* ( u(:,t) - u_ref ) + c
         %A{t} * () + B{t} * () + c;
     end
-
-    % Time-independent Q and R matrices
-    Qfinal = 10*eye(7);
-    %Qfinal(5, 5) = 1;
-
-    Q = eye(7);
-    Q(4:6, 4:6) = 0.1;
-
-    R = 0.1 * eye(3);
 
     [K, P] = createTimeVaryingController(A, B, Q, R, Qfinal);
     Policy{i}.K = K;

@@ -2,6 +2,12 @@ function cost = g(s)
 %G Cost function (negative reward)
 %   Detailed explanation goes here
     
-    cost = sum(s .^ 2);
+    % Term for distance raced along track axis
+    distance = s(4) - s(1);
+    
+    % Term for off-road
+    offroad = (s(5) >= 1 || s(5) <= -1);
+    
+    cost = -1 * distance^2 + offroad;
 end
 

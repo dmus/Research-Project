@@ -86,7 +86,7 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
                 u3 = u_ref;
                 u3(i) = u3(i) - u_eps;
                 
-                Q(i,j) = (h(u1) - 2*r_0 + h(u3)) / u_eps^2;
+                R(i,j) = (h(u1) - 2*r_0 + h(u3)) / u_eps^2;
             else
                 u1 = u_ref;
                 u1([i j]) = u1([i j]) + u_eps;
@@ -100,7 +100,7 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
                 u4 = u_ref;
                 u4([i j]) = u4([i j]) + [-u_eps; -u_eps];
 
-                Q(i,j) = (h(u1) - h(u2) - h(u3) + h(u4)) / (4 * u_eps * u_eps);
+                R(i,j) = (h(u1) - h(u2) - h(u3) + h(u4)) / (4 * u_eps * u_eps);
             end
         end
     end
