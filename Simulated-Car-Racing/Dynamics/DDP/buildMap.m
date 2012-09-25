@@ -47,23 +47,23 @@ function T = buildMap(S, Sensors)
     
     
     
-    plotTrajectory(Track, 'b');
-    hold on;
-%     plotTrajectory(Left, 'black');
-%     plotTrajectory(Right, 'black');
-    plotTrajectory(S, 'r');
-    
-    plotTrajectory(Track(from:to,:), 'b');
-    hold on;
-    
-    %plotTrajectory(Left(from:to,:), 'black');
-    %plotTrajectory(Right(from:to,:), 'black');
-    
-    plotTrajectory(S(from:to,:), 'r');
-    plot([Left(from:to,1) Right(from:to,1)]', [Left(from:to,2) Right(from:to,2)]','b-')
-    plot([Track(from:to,1) S(from:to,1)]', [Track(from:to,2) S(from:to,2)]', 'b-');
-    
-    hold off;
+%     plotTrajectory(Track, 'b');
+%     hold on;
+% %     plotTrajectory(Left, 'black');
+% %     plotTrajectory(Right, 'black');
+%     plotTrajectory(S, 'r');
+%     
+%     plotTrajectory(Track(from:to,:), 'b');
+%     hold on;
+%     
+%     %plotTrajectory(Left(from:to,:), 'black');
+%     %plotTrajectory(Right(from:to,:), 'black');
+%     
+%     plotTrajectory(S(from:to,:), 'r');
+%     plot([Left(from:to,1) Right(from:to,1)]', [Left(from:to,2) Right(from:to,2)]','b-')
+%     plot([Track(from:to,1) S(from:to,1)]', [Track(from:to,2) S(from:to,2)]', 'b-');
+%     
+%     hold off;
     
     T = zeros(size(Track,1)-1,3);
     for t = 1:size(Track,1)-1

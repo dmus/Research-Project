@@ -3,7 +3,7 @@ function cost = g(s)
 %   Detailed explanation goes here
     
     % Term for distance raced along track axis
-    distance = s(4) - s(1);
+    distance = s(11) - s(4);
     
     % Term for off-road
     offroad = (s(5) >= 1 || s(5) <= -1);

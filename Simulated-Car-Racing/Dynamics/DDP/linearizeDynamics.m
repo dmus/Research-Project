@@ -1,4 +1,4 @@
-function [A, B, c] = linearizeDynamics(f, x_ref, u_ref, dt, my_eps, x_ref_next)
+function [A, B, c] = linearizeDynamics(f, x_ref, u_ref, dt, my_eps, x_ref_next, Map)
 
 % meaning: x(:,t+1) - x_ref_tplus1  to-first-order-equal-to A*( x(:,t)-x_ref ) + B* ( u(:,t) - u_ref ) + c
 %  if we pick an equilibrium x_ref and u_ref, then x_ref = f(x_ref, u_ref),
@@ -13,21 +13,25 @@ u_eps = my_eps;
 for i = 1:length(x_ref)
 	x_plus = x_ref_next;
 	x_plus(i) = x_plus(i) + x_eps;
-	x1_plus = f(x_plus, u_ref, dt);
+	x1_plus = f(x_plus, u_ref, dt, Map);
+    
 	x_minus = x_ref_next;
 	x_minus(i) = x_minus(i) - x_eps;
-	x1_minus = f(x_minus, u_ref, dt);
-	A(:,i) = (x1_plus - x1_minus) / (2*x_eps);
+	x1_minus = f(x_minus, u_ref, dt, Map);
+	
+    A(:,i) = (x1_plus - x1_minus) / (2*x_eps);
 end
 
 for i = 1:length(u_ref)
 	u_plus = u_ref;
 	u_plus(i) = u_plus(i) + u_eps;
-	x1_plus = f(x_ref, u_plus, dt);
-	u_minus = u_ref;
+	x1_plus = f(x_ref, u_plus, dt, Map);
+	
+    u_minus = u_ref;
 	u_minus(i) = u_minus(i) - u_eps;
-	x1_minus = f(x_ref, u_minus, dt);
-	B(:,i) = (x1_plus - x1_minus) / (2*u_eps);
+	x1_minus = f(x_ref, u_minus, dt, Map);
+	
+    B(:,i) = (x1_plus - x1_minus) / (2*u_eps);
 end
 
-c = f(x_ref,u_ref,dt) - x_ref_next;
+c = f(x_ref,u_ref,dt,Map) - x_ref_next;

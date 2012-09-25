@@ -65,14 +65,14 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
     for i = 1:length(u_ref)
         u_plus = u_ref;
         u_plus(i) = u_plus(i) + u_eps;
-        u1_plus = g(u_plus);
+        u1_plus = h(u_plus);
         u_minus = u_ref;
         u_minus(i) = u_minus(i) - u_eps;
-        u1_minus = g(u_minus);
+        u1_minus = h(u_minus);
         r(i) = (u1_plus - u1_minus) / (2*u_eps);
     end
 
-    % Now partial derivative g_{xx}
+    % Now partial derivative h_{uu}
     R = zeros(length(u_ref));
     for i = 1:length(u_ref)
         for j = 1:length(u_ref)

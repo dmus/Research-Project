@@ -13,14 +13,14 @@ for t = 1:size(U,1)-1
     s_new = f(s,u,dt);
 
     % Position of origin relative to track axis
-    ref = Laps{2}.S(t,[4 1 69]);
+    ref = Laps{2}.S(t,[4 69 1]);
     
     % Position + orientation relative to origin
     p = s(4:6) * dt;
     features = phi(p, Map, ref);
     
     % Compute squared error
-    error = (Laps{2}.S(t+1,[4 1 69]) - features) .^ 2;
+    error = (Laps{2}.S(t+1,[4 69 1]) - features) .^ 2;
     
     total_error = total_error + error;
 end

@@ -1,12 +1,14 @@
 function f = phi(s, map, ref)
-%PHI Summary of this function goes here
-%   Detailed explanation goes here
+%PHI Computes three state features (distance along track axis, distance from track axis, angle with respect to track axis)..
+%   S is position (x,y,alpha) relative with respect to origin, MAP is a map
+%   of the full track axis and REF is position and orientation of origin
+%   relative to track axis.
 
     mapSize = size(map,1);
 
     trackWidth = 12;
-    trackPos = ref(3) * (trackWidth / 2);
-    alpha = -ref(2);
+    trackPos = ref(2) * (trackWidth / 2);
+    alpha = -ref(3);
 
     if trackPos > 0 
         track = [abs(trackPos) * cos(alpha - 0.5*pi); abs(trackPos) * sin(alpha - 0.5*pi)];
@@ -55,15 +57,15 @@ function f = phi(s, map, ref)
         end
     end
     
-    f = zeros(1,3);
+    f = zeros(3,1);
     
     % Distance from track axis
     relative_cte = (r(2) * dp(1) - r(1) * dp(2)) / (dp' * dp);
     absolute_cte = relative_cte * sqrt(dp' * dp);
-    f(3) = absolute_cte / (0.5 * trackWidth);
+    f(2) = absolute_cte / (0.5 * trackWidth);
     
     % Angle with respect to track axis
-    f(2) = s(3) - (alpha + u * map(prev_index,3));
+    f(3) = s(3) - (alpha + u * map(prev_index,3));
     
     % Distance to go along track axis
     %f(1) = map(prev_index,1) + u * (map(index,1) - map(prev_index,2));
