@@ -8,6 +8,6 @@ function cost = g(s)
     % Term for off-road
     offroad = (s(5) >= 1 || s(5) <= -1);
     
-    cost = -1 * distance^2 + offroad;
+    cost = -1 * distance^2;
 end
 

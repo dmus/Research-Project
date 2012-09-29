@@ -3,8 +3,8 @@
 % Read output log and do some formatting
 init;
 
-% Horizon, corresponding to 5 seconds
-H = 20;
+% Horizon, corresponding to 1 seconds
+H = 50;
 
 % Compute 6-dimensional state containing (position, orientation, velocity, 
 % angular rate)
