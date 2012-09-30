@@ -2,6 +2,9 @@ package champ2011client;
 
 import java.io.File;
 
+import champ2011client.behaviour.ClutchBehaviour;
+import champ2011client.behaviour.StandardGearChangeBehaviour;
+
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
@@ -13,6 +16,9 @@ import matlabcontrol.extensions.MatlabTypeConverter;
 public class Alonso extends Controller {
 
 	private MatlabProxy proxy;
+	
+	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
+    protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
 	
 	public Alonso() throws MatlabConnectionException, MatlabInvocationException {
 		System.out.println("Starting MATLAB proxy");
@@ -36,17 +42,18 @@ public class Alonso extends Controller {
     	Action action = new Action();
 
     	try {
-    		// Proxy sensor values in message to MATLAB object
+    		// Proxy sensor values in message string to MATLAB object
     		proxy.setVariable("message", sensorModel.getMessage());
     		proxy.eval("a = driver.control(message)");
     		MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
     		double[][] controls = processor.getNumericArray("a").getRealArray2D();
     		
-			action.gear = 1;
 		    action.accelerate = controls[0][0];
 		    action.brake = controls[1][0];
 		    action.steering = controls[2][0];
 		    
+		    gearBehaviour.execute(sensorModel, action);
+	        clutchBehaviour.execute(sensorModel, action);
 		} catch (MatlabInvocationException e) {
 			e.printStackTrace();
 		}
