@@ -14,6 +14,9 @@ function cost = g(s)
     % Term for off-road
     offroad = (s(5) >= 1 || s(5) <= -1);
     
-    cost = -1 * distance^2;
+    % Speed
+    speed = s(1);
+    
+    cost = speed^2;
 end
 

@@ -32,7 +32,9 @@ classdef Controller < handle
             obj.model = S.model;
         end
         
-        function action = control(this, message)
+        function action = control(this, message)  
+            tic
+            
             % Read all sensor values
             this.previousSensors = this.sensors;
             this.parse(message);
@@ -47,6 +49,7 @@ classdef Controller < handle
             
             % Increase timestep
             this.t = this.t + 1;
+            disp(this.t);
             
             % Compute current state
             this.computeState();
@@ -58,6 +61,8 @@ classdef Controller < handle
             
             % For next iteration
             this.previousAction = action;
+            
+            toc
         end
         
         function reset(this)
@@ -79,7 +84,7 @@ classdef Controller < handle
             s(1:2) = this.sensors(47:48);
             
             % Angular velocity
-            s(3) = this.estimateYawRate();
+            s(3) = 0;%this.estimateYawRate();
             
             % State features
             s(4:6) = this.sensors([4 69 1]);
@@ -104,8 +109,12 @@ classdef Controller < handle
             alpha = 0.815; 
             
             % Current guess
-            yawRate = 0;
-            delta = 0.001;
+            yawRate = 0; %this.previousState(3);
+            
+            if abs(yawRate) > 10
+                disp('stop');
+            end
+            
             epsilon = 0.00001;
             
             % Compute marks at time t-1
@@ -123,35 +132,9 @@ classdef Controller < handle
             newMarks = [newRanges .* cos(angles) newRanges .* sin(angles)];
             [newMarksLeft, newMarksRight] = groupRangeFinders(newMarks, 10);
             
-            % Error with initial guess
-            bestError = computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, yawRate);
-
-            % Coordinate descent search
-            while delta > epsilon
-                yawRate = yawRate + delta;
-
-                % Try with greater value
-                error = computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, yawRate);
-
-                if error < bestError
-                    bestError = error;
-                    delta = delta * 1.1;
-                else
-                    % If no success true smaller value
-                    yawRate = yawRate - (2 * delta);
-                    error = computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, yawRate);
-                    if error < bestError
-                        bestError = error;
-                        delta = delta * 1.1;
-                    else
-                        % If no success, reset yawrate and try with smaller steps next
-                        % time
-                        yawRate = yawRate + delta;
-                        delta = delta * 0.9;
-                    end
-                end
-            end
-
+            yawRate = fminunc(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), 0, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
+            
+            disp(i);
             yawRate = yawRate * alpha;
             
             % Now we have a better estimate for the yawrate at time t-1
@@ -163,8 +146,15 @@ classdef Controller < handle
             
             % a is action at time t-1 converted to other format
             a = this.previousAction;
-            a = [a(1) + -1 * a(2), a(3), 1];
-    
+            a(a > 1) = 1;
+            a(a < -1) = -1;
+            
+            if a(2) > 0
+                a = [-1 * a(2), a(3), 1];
+            else
+                a = [a(1), a(3), 1];
+            end
+            
             acc = zeros(3,1);
             acc(1:2) = this.model.Apos * mapStates(s')' + this.model.Bpos * mapInputs(a, s')';
             acc(3) = this.model.Arot * mapStates(s')' + this.model.Brot * mapInputs(a, s')';

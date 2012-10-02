@@ -16,6 +16,7 @@ import matlabcontrol.extensions.MatlabTypeConverter;
 public class Alonso extends Controller {
 
 	private MatlabProxy proxy;
+	private int t = 0;
 	
 	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
@@ -41,6 +42,15 @@ public class Alonso extends Controller {
     public Action control(SensorModel sensorModel) {
     	Action action = new Action();
 
+    	if (sensorModel.getCurrentLapTime() >= 0)
+    		t++;
+    	
+    	System.out.println(t);
+    	if (t > 50) {
+    		action.restartRace = true;
+    		return action;
+    	}
+    	
     	try {
     		// Proxy sensor values in message string to MATLAB object
     		proxy.setVariable("message", sensorModel.getMessage());

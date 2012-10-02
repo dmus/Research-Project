@@ -9,19 +9,19 @@ H = 50;
 refTrajectory.S = [Laps{1}.S; Laps{2}.S];
 refTrajectory.A = [Laps{1}.A; Laps{2}.A];
 
-% Compute 6-dimensional state containing (position, orientation, velocity, 
-% angular rate)
-S = computeStateRepresentation(refTrajectory.S(1:H+1,:));
-% Gas, brake and steering controls
-U = refTrajectory.A(1:H+1,[1 2 5]);
-
-save('exp1.mat', 'S', 'U');
-% load('exp1.mat', 'S', 'U');
+% % Compute 6-dimensional state containing (position, orientation, velocity, 
+% % angular rate)
+% S = computeStateRepresentation(refTrajectory.S(1:H+1,:));
+% % Gas, brake and steering controls
+% U = refTrajectory.A(1:H+1,[1 2 5]);
+% 
+% save('exp1.mat', 'S', 'U');
+load('exp1.mat', 'S', 'U', 'Map');
 
 times = computeDiscretizedTimes(refTrajectory.S(1:H+1,:));
 
 % Map represents the track axis
-Map = buildMap(S, Laps{2}.S);
+% Map = buildMap(computeStateRepresentation(Laps{2}.S), Laps{2}.S);
 trackLength = 6205.46;
 trackWidth = 12;
 
@@ -29,18 +29,18 @@ trackWidth = 12;
 % Parameter for finite difference methods
 my_eps = 0.1;
     
-features = Laps{1}.S(end,[4 69 1])';
-features(1) = features(1) - trackLength;
-s_ref_previous = [S(1,4:6)'; features];
+% features = Laps{1}.S(end,[4 69 1])';
+% features(1) = features(1) - trackLength;
+s_ref_previous = [S(1,4:6)'; refTrajectory.S(1,[4 69 1])'];
     
 for t = 1:H
     % Linear and angular velocities
-    s_ref_dynamic = S(t,4:6)';
-    s_ref_tplus1_dynamic = S(t+1,4:6)';
+%     s_ref_dynamic = S(t,4:6)';
+%     s_ref_tplus1_dynamic = S(t+1,4:6)';
         
     % Add state features
-    s_ref = [s_ref_dynamic; Laps{2}.S(t,[4 69 1])'];
-    s_ref_tplus1 = [s_ref_tplus1_dynamic; Laps{2}.S(t+1,[4 69 1])'];
+    s_ref = [S(t,4:6)'; refTrajectory.S(t,[4 69 1])'];
+    s_ref_tplus1 = [S(t+1,4:6)'; refTrajectory.S(t+1,[4 69 1])'];
         
     % Control input and time difference
     u_ref = U(t,:)';
