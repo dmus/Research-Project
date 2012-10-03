@@ -17,6 +17,8 @@ public class Alonso extends Controller {
 
 	private MatlabProxy proxy;
 	private int t = 0;
+	private int trial = 1;
+	private int H = 3;
 	
 	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
@@ -36,7 +38,7 @@ public class Alonso extends Controller {
 		proxy = factory.getProxy();
 
 		// Initialize new controller
-	    proxy.eval("driver = Controller");
+	    proxy.eval("driver = Controller;");
 	}
 
     public Action control(SensorModel sensorModel) {
@@ -46,15 +48,20 @@ public class Alonso extends Controller {
     		t++;
     	
     	System.out.println(t);
-    	if (t > 50) {
-    		action.restartRace = true;
+    	if (t > H)
     		return action;
-    	}
     	
     	try {
     		// Proxy sensor values in message string to MATLAB object
     		proxy.setVariable("message", sensorModel.getMessage());
-    		proxy.eval("a = driver.control(message)");
+    		proxy.eval("a = driver.control(message);");
+    		
+    		if (t == H) {
+    			System.out.println("Restart requested...");
+        		action.restartRace = true;
+        		return action;
+        	}
+    		
     		MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
     		double[][] controls = processor.getNumericArray("a").getRealArray2D();
     		
@@ -65,26 +72,31 @@ public class Alonso extends Controller {
 		    gearBehaviour.execute(sensorModel, action);
 	        clutchBehaviour.execute(sensorModel, action);
 		} catch (MatlabInvocationException e) {
-			e.printStackTrace();
+			System.out.println("Error in MATLAB script.");
+			action.restartRace = true;
 		}
 
         return action;
     }
 
     public void reset() {
-		System.out.println("Restarting the race...");
+		System.out.println("Trial " + trial + " has ended. Restarting the race...");
 		
 		try {
-			proxy.eval("driver.reset()");
+			proxy.eval("driver.reset();");
 		} catch (MatlabInvocationException e) {
-			e.printStackTrace();
+			System.out.println("Error in MATLAB reset() method...");
+			proxy.disconnect();
 		}
+		
+		t = 0;
+		trial++;
 	}
 
 	public void shutdown() {
 		//Disconnect the proxy from MATLAB
 		try {
-			proxy.eval("driver.shutdown");
+			proxy.eval("driver.shutdown();");
 		} catch (MatlabInvocationException e) {
 			e.printStackTrace();
 		}

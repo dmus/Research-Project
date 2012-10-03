@@ -12,27 +12,38 @@ classdef Controller < handle
         P               % Time-varying cost-to-go function
         previousAction  % Action executed at time t-1
         model           % Acceleration-model for prediction of next state
+        H               % Horizon
+        history         % Previous states and actions for this trial
+        Map             % Map representing the track
     end
     
     methods
         function obj = Controller
             obj.t = 0;
-            obj.previousAction = [0 0 0 1]';
-            obj.previousState = zeros(18,1);
-            obj.state = zeros(18,1);
+            obj.previousAction = [0 0 1]';
+            obj.previousState = zeros(14,1);
+            obj.state = zeros(14,1);
             
             % Load policy and cost-to-go matrices
             S = load('policy.mat', 'K', 'P');
             obj.K = S.K;
             obj.P = S.P;
+            obj.H = length(obj.K);
+            
+            obj.history.S = zeros(obj.H,14);
+            obj.history.U = zeros(obj.H,3);
             
             % Load Acceleration-model
             addpath('../Acceleration-Model', '../Yaw-Rate-Estimation');
             S = load('AccelerationLaggedModel.mat', 'model');
             obj.model = S.model;
+            
+            % Load map
+            S = load('Map.mat', 'Map');
+            obj.Map = S.Map;
         end
         
-        function action = control(this, message)  
+        function a = control(this, message)  
             tic
             
             % Read all sensor values
@@ -42,22 +53,45 @@ classdef Controller < handle
             
             % If start sign is not given yet
             if this.sensors(2) < 0
-                this.state = [this.sensors([47 48]); 0; this.sensors([4 69 1]); 1; this.previousState(1:7); this.previousAction];
-                action = [0 0 0]';
+                this.state = [this.sensors([47 48]); 0; this.sensors([4 69 1]); 1; this.previousState(1:7)];%; this.previousAction];
+                a = [0 0 0 1]';
+                toc
                 return;
             end
             
             % Increase timestep
             this.t = this.t + 1;
-            disp(this.t);
             
             % Compute current state
             this.computeState();
             
+            this.history.T(this.t,:) = this.sensors(2); % TODO fix for new lap
+            this.history.S(this.t,:) = this.state';
+            
+            if this.t == this.H
+                % Output does not matter, because trial has ended
+                a = [0 0 0 1]';
+                toc
+                return;
+            end
+            
             % Policy for current timestep is already known, compute change
             % in control inputs
-            change = this.K{this.t} * this.state;
-            action = this.previousAction + change;
+            % change = this.K{this.t} * this.state;
+            % action = this.previousAction + change;
+            action = this.K{this.t} * this.state; % DEVIATION FROM REF TRAJECTORY
+            
+            disp(this.t);
+            action
+            
+            this.history.U(this.t,:) = action;
+            
+            % Check if accelerating or braking
+            if action(1) > 0
+                a = [action(1); 0; action(2:3)];
+            else
+                a = [0; action];
+            end
             
             % For next iteration
             this.previousAction = action;
@@ -67,6 +101,17 @@ classdef Controller < handle
         
         function reset(this)
             disp('resetting...');
+            
+            % Compute and solve new optimal control problem
+            [K, P] = computePolicy(this.history.S, this.history.U, this.history.T, this.Map);
+            this.K = K;
+            this.P = P;
+            
+            % Reset history and counter
+            this.history.S = zeros(this.H, 14);
+            this.history.U = zeros(this.H, 3);
+            this.history.T = zeros(this.H, 1);
+            this.t = 0;
         end
         
         function shutdown(this)
@@ -84,7 +129,7 @@ classdef Controller < handle
             s(1:2) = this.sensors(47:48);
             
             % Angular velocity
-            s(3) = 0;%this.estimateYawRate();
+            s(3) = this.estimateYawRate();
             
             % State features
             s(4:6) = this.sensors([4 69 1]);
@@ -94,7 +139,7 @@ classdef Controller < handle
             s(8:14) = this.previousState(1:7);
             
             % Also previous action in state
-            s(15:18) = this.previousAction;
+            %s(15:17) = this.previousAction;
             
             this.state = s;
         end
@@ -109,11 +154,7 @@ classdef Controller < handle
             alpha = 0.815; 
             
             % Current guess
-            yawRate = 0; %this.previousState(3);
-            
-            if abs(yawRate) > 10
-                disp('stop');
-            end
+            yawRate = 0;%this.previousState(3);
             
             epsilon = 0.00001;
             
@@ -132,13 +173,12 @@ classdef Controller < handle
             newMarks = [newRanges .* cos(angles) newRanges .* sin(angles)];
             [newMarksLeft, newMarksRight] = groupRangeFinders(newMarks, 10);
             
-            yawRate = fminunc(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), 0, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
+            yawRate = fminunc(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), yawRate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
             
-            disp(i);
             yawRate = yawRate * alpha;
             
             % Now we have a better estimate for the yawrate at time t-1
-            this.previousState(3) = yawRate;
+            this.previousState(3) = yawRate / dt;
             
             % Use our acceleration model for a prediction for time t
             % Predict acceleration at time t+tau
@@ -149,15 +189,9 @@ classdef Controller < handle
             a(a > 1) = 1;
             a(a < -1) = -1;
             
-            if a(2) > 0
-                a = [-1 * a(2), a(3), 1];
-            else
-                a = [a(1), a(3), 1];
-            end
-            
             acc = zeros(3,1);
-            acc(1:2) = this.model.Apos * mapStates(s')' + this.model.Bpos * mapInputs(a, s')';
-            acc(3) = this.model.Arot * mapStates(s')' + this.model.Brot * mapInputs(a, s')';
+            acc(1:2) = this.model.Apos * mapStates(s')' + this.model.Bpos * mapInputs(a', s')';
+            acc(3) = this.model.Arot * mapStates(s')' + this.model.Brot * mapInputs(a', s')';
                 
             % Compute predicted state at time t with predicted accelerations
             angle = s(3) * dt;

@@ -8,7 +8,6 @@ function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, P
     % Rotate new points around origin and add translation
     PointsLeft = bsxfun(@plus, R*PointsLeft', move')';
     PointsRight = bsxfun(@plus, R*PointsRight', move')';
-    %ResultingPoints = (R * bsxfun(@plus, Ranges, move)')';
     
     % Range finders at the left side
     index = 1;

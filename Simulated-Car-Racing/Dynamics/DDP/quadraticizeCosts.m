@@ -14,9 +14,11 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
         x_plus = x_ref;
         x_plus(i) = x_plus(i) + x_eps;
         x1_plus = g(x_plus);
+        
         x_minus = x_ref;
         x_minus(i) = x_minus(i) - x_eps;
         x1_minus = g(x_minus);
+        
         q(i) = (x1_plus - x1_minus) / (2*x_eps);
     end
 
@@ -56,6 +58,10 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
     % To quadratic form
     Q = [0.5*Q 0.5*q;0.5*q' q_0];
     
+    if nargout <= 1
+        return;
+    end
+    
     % Now the same for the R matrix
     % Constant term
     r_0 = h(u_ref);
@@ -66,9 +72,11 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
         u_plus = u_ref;
         u_plus(i) = u_plus(i) + u_eps;
         u1_plus = h(u_plus);
+        
         u_minus = u_ref;
         u_minus(i) = u_minus(i) - u_eps;
         u1_minus = h(u_minus);
+        
         r(i) = (u1_plus - u1_minus) / (2*u_eps);
     end
 
@@ -108,4 +116,5 @@ function [Q, R] = quadraticizeCosts(g, h, x_ref, u_ref, my_eps)
     % To quadratic form
     R = [0.5*R 0.5*r;0.5*r' r_0];
 end
+
 

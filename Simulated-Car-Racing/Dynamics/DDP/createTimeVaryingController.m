@@ -16,7 +16,7 @@ function [K, P] = createTimeVaryingController(A, B, Q, R, Qfinal)
 P_current = Qfinal;
 t = length(A);
 for k = 1:length(A)
-    K_new = -(R{t} + B{t}' * P_current * B{t})^-1 * B{t}' * P_current * A{t};
+    K_new = -pinv(R{t} + B{t}' * P_current * B{t}) * B{t}' * P_current * A{t};
     P_new = Q{t} + K_new' * R{t} * K_new + (A{t} + B{t} * K_new)' * P_current * (A{t} + B{t} * K_new);
     
     K_current = K_new;

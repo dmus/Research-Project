@@ -7,12 +7,9 @@ function s_next = f(s, u, dt, Map)
     % Make sure limits are respected in control inputs
     u(u > 1) = 1;
     u(u < -1) = -1;
-    u(u(1:2) < 0) = 0;
     
     % Mapping to other input representation
-    u(1) = u(1) + -1 * u(2);
-    u(2) = u(3);
-    u(3) = 1;
+    u = [u; 1];
     
     % Compute accelerations
     s_temp = s';
