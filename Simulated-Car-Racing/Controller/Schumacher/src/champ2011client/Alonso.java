@@ -18,7 +18,7 @@ public class Alonso extends Controller {
 	private MatlabProxy proxy;
 	private int t = 0;
 	private int trial = 1;
-	private int H = 3;
+	private int H = 100;
 	
 	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
@@ -38,7 +38,7 @@ public class Alonso extends Controller {
 		proxy = factory.getProxy();
 
 		// Initialize new controller
-	    proxy.eval("driver = Controller;");
+	    proxy.eval("driver = Controller(" + H + ");");
 	}
 
     public Action control(SensorModel sensorModel) {
@@ -47,7 +47,7 @@ public class Alonso extends Controller {
     	if (sensorModel.getCurrentLapTime() >= 0)
     		t++;
     	
-    	System.out.println(t);
+    	//System.out.println(t);
     	if (t > H)
     		return action;
     	

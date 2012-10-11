@@ -1,11 +1,7 @@
-function cost = g(s, s_ref, alpha)
+function cost = g(s)
 %G Cost function (negative reward)
 %   Detailed explanation goes here
 
-    deviationPenalty = 0;
-    if nargin > 1
-        deviationPenalty = sum((s - s_ref) .^2);
-    end
     trackLength = 6205.46; 
 
     % Term for distance raced along track axis
@@ -22,7 +18,7 @@ function cost = g(s, s_ref, alpha)
     % Speed
     speed = s(1);
     
-    cost = -(speed^2) + s(5)^2;
-    cost = (1 - alpha) * cost + alpha * deviationPenalty;
+    cost = -(distance^2) + 1000 * offroad;
+    cost = distance^2;
 end
 

@@ -1,4 +1,4 @@
-function [K,P] = computePolicy(S, U, times, Map)
+function [K,P] = computePolicy(S, U, times, Map, alpha)
 %COMPUTEPOLICY Summary of this function goes here
 %   Detailed explanation goes here
     
@@ -27,7 +27,11 @@ function [K,P] = computePolicy(S, U, times, Map)
 
         % Approximate costs in quadratic form around reference trajectory
         [Q{t}, R{t}] = quadraticizeCosts(@g, @h, s_ref(1:13), u_ref(1:2), my_eps);
-
+        
+        % Penalize deviations from reference trajectory
+        Q{t} = (1 - alpha) * Q{t} + alpha * [eye(13) zeros(13,1); zeros(1,13 + 1)];
+        R{t} = (1 - alpha) * R{t} + alpha * [eye(2) zeros(2,1); zeros(1,2 + 1)];
+        
         % Extend matrices to be able to store previous state in current
         % state (and penalize for change in control inputs)
         Aprime{t} = [A{t} zeros(size(A{t}));% B{t}; 
@@ -42,7 +46,8 @@ function [K,P] = computePolicy(S, U, times, Map)
     end
 
     Qprime{H} = quadraticizeCosts(@g, @h, S(H,1:13)', U(H,1:2)', my_eps);
+    Qprime{H} = (1 - alpha) * Qprime{H} + alpha * [eye(13) zeros(13, 1); zeros(1, 13 + 1)];
+    
     [K, P] = createTimeVaryingController(Aprime, Bprime, Qprime, Rprime, Qprime{H});
-
 end
 

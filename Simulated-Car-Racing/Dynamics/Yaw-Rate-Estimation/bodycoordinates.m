@@ -1,3 +1,6 @@
+% OLD
+% Yawrate estimation based on wheel radius
+
 clear;
 filename = 'Trials/track01_ExploreDriver4.mat';
 

@@ -56,33 +56,34 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
             delta = 0.001;
 
             epsilon = 0.00001;
-            bestError = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
-
-            % Coordinate descent search
-            while delta > epsilon
-                yawrate = yawrate + delta;
-
-                % Try with greater value
-                error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
-
-                if error < bestError
-                    bestError = error;
-                    delta = delta * 1.1;
-                else
-                    % If no success true smaller value
-                    yawrate = yawrate - (2 * delta);
-                    error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
-                    if error < bestError
-                        bestError = error;
-                        delta = delta * 1.1;
-                    else
-                        % If no success, reset yawrate and try with smaller steps next
-                        % time
-                        yawrate = yawrate + delta;
-                        delta = delta * 0.9;
-                    end
-                end
-            end
+            %bestError = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
+            
+            yawrate = fminunc(@(x) computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, x), yawrate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
+%             Coordinate descent search
+%             while delta > epsilon
+%                 yawrate = yawrate + delta;
+% 
+%                 Try with greater value
+%                 error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
+% 
+%                 if error < bestError
+%                     bestError = error;
+%                     delta = delta * 1.1;
+%                 else
+%                     If no success true smaller value
+%                     yawrate = yawrate - (2 * delta);
+%                     error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
+%                     if error < bestError
+%                         bestError = error;
+%                         delta = delta * 1.1;
+%                     else
+%                         If no success, reset yawrate and try with smaller steps next
+%                         time
+%                         yawrate = yawrate + delta;
+%                         delta = delta * 0.9;
+%                     end
+%                 end
+%             end
 
             yawrate = yawrate * alpha;
         end
