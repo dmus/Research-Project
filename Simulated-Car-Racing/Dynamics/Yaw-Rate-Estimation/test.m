@@ -12,15 +12,15 @@ States = States(1:5636,:);
 Actions = Actions(1:5636,:);
 
 times = computeDiscretizedTimes(States);
-
+tic
 [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States);
-
+toc
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
 S(:,3) = yawRates;
 
 % Compute world coordinates
-Sg = [zeros(size(S,1), 3) S(:,4:6)];
+Sg = [zeros(size(S,1), 3) S(:,1:3)];
 for t = 2:size(S,1)
     prev = Sg(t-1,:);
     x = prev(1);
@@ -39,6 +39,7 @@ for t = 2:size(S,1)
     Sg(t, 1:3) = [x_new y_new yaw_new];
 end
 
+% Find starting points of new laps
 ind = find(States(:,4) < 2);
 starts = 1;
 for i = 1:length(ind)

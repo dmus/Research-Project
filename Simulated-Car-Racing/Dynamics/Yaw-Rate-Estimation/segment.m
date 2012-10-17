@@ -20,6 +20,8 @@ function segments = segment(Points, threshold)
     % Find two biggest segments
     segmentSize = segments(:,2) - segments(:,1) + 1;
     [~,i] = sort(segmentSize, 1, 'descend');
-    segments = [segments(i(1),:); segments(i(2),:)];
+    
+    % Return only two segments
+    segments = sort([segments(i(1),:); segments(i(2),:)]);
 end
 
