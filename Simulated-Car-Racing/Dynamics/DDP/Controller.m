@@ -185,7 +185,7 @@ classdef Controller < handle
             dt = this.sensors(2) - this.previousSensors(2);
             
             % Compensation parameter 
-            alpha = 0.815; 
+            alpha = 0.805; 
             
             % Current guess
             yawRate = 0;%this.previousState(3);
@@ -209,13 +209,13 @@ classdef Controller < handle
                 newMarks = [newRanges .* cos(angles) newRanges .* sin(angles)];
                 [newMarksLeft, newMarksRight] = groupRangeFinders(newMarks, 10);
 
-                yawRate = fminunc(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), yawRate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
+                yawRate = fminsearch(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), yawRate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
 
                 yawRate = yawRate * alpha;
                 
                 % Now we have a better estimate for the yawrate at time t-1
                 this.previousState(3) = yawRate / dt;
-            catch err
+            catch e
                 disp('Error in yaw rate estimation');
             end
             

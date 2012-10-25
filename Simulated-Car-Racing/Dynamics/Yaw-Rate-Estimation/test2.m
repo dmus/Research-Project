@@ -1,4 +1,6 @@
-clear S;
+% Quick method to test alternative with splines
+
+clear;
 addpath('../Trials');
 filename = 'Wheel-2_MrRacer.mat';
 
@@ -13,7 +15,7 @@ Actions = Actions(1:5636,:);
 
 times = computeDiscretizedTimes(States);
 tic
-yawRates = polarScanMatching(States);
+yawRates = splineMethod(States);
 toc
 S(:,1) = States(:,47) * 1000 / 3600;
 S(:,2) = States(:,48) * 1000 / 3600;
@@ -39,6 +41,7 @@ for t = 2:size(S,1)
     Sg(t, 1:3) = [x_new y_new yaw_new];
 end
 
+% Find starting points of new laps
 ind = find(States(:,4) < 2);
 starts = 1;
 for i = 1:length(ind)
@@ -48,5 +51,5 @@ for i = 1:length(ind)
     end
 end
 
-plot(Sg(1:end,1), Sg(1:end,2), 'b');
+plot(Sg(:,1), Sg(:,2), 'r');
 %scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1);

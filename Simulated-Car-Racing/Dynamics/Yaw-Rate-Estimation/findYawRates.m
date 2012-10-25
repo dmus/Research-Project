@@ -3,7 +3,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 %   Detailed explanation goes here
     
     % Compensation parameter 
-    alpha = 0.815;
+    alpha = 0.805;
 
     S(:,1) = States(:,47) * 1000 / 3600;
     S(:,2) = States(:,48) * 1000 / 3600;
@@ -27,6 +27,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
     ranges = States(1, indices + 49)';
     Points = [ranges .* cos(angles) ranges .* sin(angles)];
     [PointsLeft, PointsRight] = groupRangeFinders(Points, 10);
+    yawrate = 0;
     for t = 1:size(States,1)-1
         fprintf('t = %0.3f\n', times(t));
         
@@ -37,7 +38,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 
         % Compute move
         dt = times(t+1) - times(t);
-        move = [S(t,1) S(t,2)] .* dt;
+        move = [.5*(S(t,1)+S(t+1,1)) .5*(S(t,2)+S(t+1,2))] .* dt;
 
         % Range finder points
         newRanges = States(t+1, indices + 49)';
@@ -55,37 +56,12 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
             delta = 0.001;
 
             epsilon = 0.00001;
-            %bestError = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
             
             %yawrate = fminunc(@(x) computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, x), yawrate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
             yawrate = fminsearch(@(x) computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, x), yawrate);
-%             Coordinate descent search
-%             while delta > epsilon
-%                 yawrate = yawrate + delta;
-% 
-%                 Try with greater value
-%                 error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
-% 
-%                 if error < bestError
-%                     bestError = error;
-%                     delta = delta * 1.1;
-%                 else
-%                     If no success true smaller value
-%                     yawrate = yawrate - (2 * delta);
-%                     error = computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, yawrate);
-%                     if error < bestError
-%                         bestError = error;
-%                         delta = delta * 1.1;
-%                     else
-%                         If no success, reset yawrate and try with smaller steps next
-%                         time
-%                         yawrate = yawrate + delta;
-%                         delta = delta * 0.9;
-%                     end
-%                 end
-%             end
 
-            yawrate = yawrate * alpha;
+
+            %yawrate = yawrate * alpha;
         end
 
         
@@ -97,7 +73,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 %         
         
         
-        yawRates(t) = yawrate / dt;
+        yawRates(t) = (yawrate * alpha) / dt;
         
 %         R = [cos(yaw) -sin(yaw); sin(yaw) cos(yaw)];
 %         

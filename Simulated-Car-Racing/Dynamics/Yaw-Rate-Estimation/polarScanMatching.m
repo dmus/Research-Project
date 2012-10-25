@@ -13,9 +13,9 @@ function yawRates = polarScanMatching(States)
 
     %t = 18139;%40;%536;
 
-    for t = 15:20
-    %for t = 2880:2881%size(States,1)
-    %for t = 2:size(States,1)
+    %for t = 15:20
+    %for t = 2890:2891%size(States,1)
+    for t = 2:size(States,1)
         fprintf('t = %0.3f\n', times(t));
         
         indices = 1:19;
@@ -23,7 +23,7 @@ function yawRates = polarScanMatching(States)
 
         % Compute move
         dt = times(t) - times(t-1);
-        translation = [S(t,1) S(t,2)] .* dt;
+        translation = [.5*(S(t-1,1)+S(t,1)) .5*(S(t-1,2)+S(t,2))] .* dt;
 
         % Initial pose of the current scan in the coordinate frame of the
         % reference scan. Bearings are expressent in current's scan
@@ -61,37 +61,40 @@ function yawRates = polarScanMatching(States)
         % interpolation
         yawRatesPerSegment = zeros(1,length(R.segments));
         for s = 1:length(R.segments)
-            first = R.segments(s,1);
-            last = R.segments(s,2);
-            bearings = R.scan(first:last,2);
+            first = C.segments(s,1);
+            last = C.segments(s,2);
+            
+            firstRef = R.segments(s,1);
+            lastRef = R.segments(s,2);
+%             bearings = R.scan(first:last,2);
+%         
+%             % Interpolation step
+%             x = C.projection(C.segments(s,1):C.segments(s,2),2);
+%             y = C.projection(C.segments(s,1):C.segments(s,2),1);
+%             C.samples = [interp1(x, y, bearings) bearings];
+%             C.samples(isnan(C.samples(:,1)),:) = [];
         
-            % Interpolation step
-            x = C.projection(C.segments(s,1):C.segments(s,2),2);
-            y = C.projection(C.segments(s,1):C.segments(s,2),1);
-            C.samples = [interp1(x, y, bearings) bearings];
-            C.samples(isnan(C.samples(:,1)),:) = [];
-        
-            % C. Orientation Estimation
-            % Find shift of samples with respect to reference scan
-            shifts = zeros(1,length(C.samples));
-            for i = 1:length(C.samples)
-                b = C.samples(i,:);
+            % Orientation Estimation
+            % Find shift of projection with respect to reference scan
+            shifts = zeros(1,last-first+1);
+            for i = first:last
+                b = C.projection(i,:);
             
                 % Up means r1 lies above r2, Down means r2 above r1
-                optionsUp = find(R.scan(first:last-1,1) <= b(1) & R.scan(first+1:last,1) >= b(1));
-                optionsDown = find(R.scan(first:last-1,1) >= b(1) & R.scan(first+1:last,1) <= b(1));
+                optionsUp = find(R.scan(firstRef:lastRef-1,1) <= b(1) & R.scan(firstRef+1:lastRef,1) >= b(1));
+                optionsDown = find(R.scan(firstRef:lastRef-1,1) >= b(1) & R.scan(firstRef+1:lastRef,1) <= b(1));
                 options = [optionsUp optionsDown];
             
                 if isempty(options)
-                    shifts(i) = NaN;
+                    shifts(i-first+1) = NaN;
                     continue; 
                 end
             
                 shiftOptions = zeros(size(options));
                 for j = 1:length(options)
                     option = options(j);
-                    r1 = R.scan(first - 1 + option,:);
-                    r2 = R.scan(first + option,:);
+                    r1 = R.scan(firstRef - 1 + option,:);
+                    r2 = R.scan(firstRef + option,:);
 
                     dr = r2 - r1;
                     dbr1 = r1 - b;
@@ -102,21 +105,59 @@ function yawRates = polarScanMatching(States)
             
                 % Select smallest shift
                 [~,index] = min(abs(shiftOptions));
-                shifts(i) = shiftOptions(index);
+                shifts(i-first+1) = shiftOptions(index);
             end
+            
+%             shifts = zeros(1,length(C.samples));
+%             for i = 1:length(C.samples)
+%                 b = C.samples(i,:);
+%             
+%                 % Up means r1 lies above r2, Down means r2 above r1
+%                 optionsUp = find(R.scan(first:last-1,1) <= b(1) & R.scan(first+1:last,1) >= b(1));
+%                 optionsDown = find(R.scan(first:last-1,1) >= b(1) & R.scan(first+1:last,1) <= b(1));
+%                 options = [optionsUp optionsDown];
+%             
+%                 if isempty(options)
+%                     shifts(i) = NaN;
+%                     continue; 
+%                 end
+%             
+%                 shiftOptions = zeros(size(options));
+%                 for j = 1:length(options)
+%                     option = options(j);
+%                     r1 = R.scan(first - 1 + option,:);
+%                     r2 = R.scan(first + option,:);
+% 
+%                     dr = r2 - r1;
+%                     dbr1 = r1 - b;
+% 
+%                     ratio = abs(dbr1(1) / dr(1));
+%                     shiftOptions(j) = dbr1(2) + ratio * dr(2);
+%                 end
+%             
+%                 % Select smallest shift
+%                 [~,index] = min(abs(shiftOptions));
+%                 shifts(i) = shiftOptions(index);
+%             end
             
             % Remove greatest shift
             shifts(isnan(shifts)) = [];
             [~,index] = max(abs(shifts));
             shifts(index) = [];
             yawRatesPerSegment(s) = mean(shifts);
+            
+            ppref = spline(R.points(firstRef:lastRef,1),R.points(firstRef:lastRef,2));
+            f = @(x) scanError(C.points(first:last,:),ppref,C.position,x);
+            yawRatesPerSegment(s) = fminsearch(f, 0);
         end
         yawrate = mean(yawRatesPerSegment);
-%         
-%         figure(1);plot(R.scan(first:last,2),R.scan(first:last,1),'r-o',C.samples(:,2)+yawrate,C.samples(:,1),'b-o')
-%         
-%         figure(2);plotScans(R.points,C.points, translation, yawrate)
         
+        
+%         
+%         figure(1);plot(R.scan(firstRef:lastRef,2),R.scan(firstRef:lastRef,1),'r-o',C.projection(first:last,2),C.projection(first:last,1),'b-o')
+%         
+%         figure(2);plotScans(C,R)
+%         
         
         % Check if last step before finish
         if States(t,4) < States(t-1,4)-100

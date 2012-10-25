@@ -40,7 +40,7 @@ function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, P
         cte = (Ry * dx - Rx * dy) / normalizer;
         
         % CTE is relative, now compute absolute error
-        cte = cte * sqrt([dx dy] * [dx; dy]);
+        cte = cte * norm([dx;dy]);
         
         error = error + cte^2;
     end
@@ -76,7 +76,7 @@ function [error] = computeProjectionError(LandmarksLeft, LandmarksRight, move, P
         cte = (Ry * dx - Rx * dy) / normalizer;
         
         % CTE is relative, now compute absolute error
-        cte = cte * sqrt([dx dy] * [dx; dy]);
+        cte = cte * norm([dx;dy]);
         
         
         error = error + cte^2;

@@ -26,9 +26,9 @@ for t = 2:size(S,1)
     x = prev(1);
     y = prev(2);
     yaw = prev(3);
-    speedX = prev(4);
-    speedY = prev(5);
-    yawRate = prev(6);
+    speedX = .5*(prev(4) + Sg(t,4));
+    speedY = .5*(prev(5)+ Sg(t,5));
+    yawRate = .5*(prev(6)+ Sg(t,6));
     
     dt = times(t) - times(t-1);
     
@@ -49,5 +49,5 @@ for i = 1:length(ind)
     end
 end
 
-scatter(Sg(41:end,1), Sg(41:end,2), 2, 'fill');
+plot(Sg(:,1), Sg(:,2), 'r');
 %scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1);
