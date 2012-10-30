@@ -51,5 +51,5 @@ for i = 1:length(ind)
     end
 end
 
-plot(Sg(:,1), Sg(:,2), 'r');
+plot(Sg(:,1), Sg(:,2), 'c');
 %scatter(Sg(starts(2):starts(3),1), Sg(starts(2):starts(3),2)*-1);

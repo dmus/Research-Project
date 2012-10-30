@@ -1,6 +1,6 @@
 function [yawRates, LeftEdge, RightEdge, Positions] = splineMethod(States)
-%FINDYAWRATE Summary of this function goes here
-%   Detailed explanation goes here
+%FINDYAWRATE Most accurate method for yaw rate estimation.
+%   Using splines and fminsearch in Cartesian coordinate system.
     
     % Compensation parameter 
     alpha = 0.9775;

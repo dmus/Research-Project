@@ -2,7 +2,7 @@ function plotScans(C, R, rotation)
 %PLOTSCANS Current scan C and reference scan R are plotted in the same
 %Cartesian coordinate system.
 %   Specify ROTATION in radians (optional) to rotate the current scan around its
-%   position.
+%   position. Replaced by SCANPLOTTER.
     
     if nargin > 2
         Rot = [cos(rotation) -sin(rotation); sin(rotation) cos(rotation)];
@@ -43,20 +43,20 @@ function plotScans(C, R, rotation)
     last = C.segments(1,2);
     plot(currentScan(first:last,1),currentScan(first:last,2),'+b');
     
-    % Interpolate to get nice curve
-    xx = currentScan(first,1):.01:currentScan(last,1);
-    yy = spline(currentScan(first:last,1),currentScan(first:last,2),xx);
-    plot(xx,yy,'-b');
-    
+%     % Interpolate to get nice curve
+%     xx = currentScan(first,1):.01:currentScan(last,1);
+%     yy = spline(currentScan(first:last,1),currentScan(first:last,2),xx);
+%     plot(xx,yy,'-b');
+%     
     % Same for left edge of current scan
     first = C.segments(2,1);
     last = C.segments(2,2);
     plot(currentScan(first:last,1),currentScan(first:last,2),'+b');
     
-    % Interpolate to get nice curve
-    xx = currentScan(last,1):.01:currentScan(first,1);
-    yy = spline(currentScan(first:last,1),currentScan(first:last,2),xx);
-    plot(xx,yy,'-b');
+%     % Interpolate to get nice curve
+%     xx = currentScan(last,1):.01:currentScan(first,1);
+%     yy = spline(currentScan(first:last,1),currentScan(first:last,2),xx);
+%     plot(xx,yy,'-b');
     
     % Now we are finished
     hold off;
