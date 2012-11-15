@@ -9,7 +9,7 @@ package champ2011client;
 public interface SensorModel {
 
     // basic information about your car and the track (you probably should take care of these somehow)
-
+	
     public double getSpeed ();
 
     public double getAngleToTrackAxis ();

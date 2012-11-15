@@ -3,30 +3,41 @@ classdef Controller < handle
     %   Controller based on iterative LQR algorithm.
     
     properties
-        t               % Current timestep
-        sensors         % Current raw sensor readings
-        previousSensors % Sensor readings at time t-1
-        state           % Current full state
-        previousState   % Full state at time t-1
-        K               % Optimal time-varying policy
-        P               % Time-varying cost-to-go function
-        previousAction  % Action executed at time t-1
-        model           % Acceleration-model for prediction of next state
-        H               % Horizon
-        history         % Previous states and actions for this trial
-        reference       % Reference trajectory
-        Map             % Map representing the track
-        alpha           % Weight parameter for penalizing deviations
-        episode         % Number of current trial
+        t                   % Current timestep
+        sensors             % Current raw sensor readings
+        previousSensors     % Sensor readings at time t-1
+        state               % Current full state
+        previousState       % Full state at time t-1
+        K                   % Optimal time-varying policy
+        P                   % Time-varying cost-to-go function
+        previousAction      % Action executed at time t-1
+        model               % Acceleration-model for prediction of next state
+        H                   % Horizon
+        history             % Previous states and actions for this trial
+        reference           % Reference trajectory
+        Map                 % Map representing the track
+        alpha               % Weight parameter for penalizing deviations
+        episode             % Number of current trial
+        rangeFinderIndices  % Sensor elements corresponding to range finders
+        angles              % Range finder configuration
+        options             % Options for fminsearch
+        A                   % LQR dynamics matrix
+        B                   % LQR dynamics matrix
+        Q                   % LQR cost matrix
+        R                   % LQR cost matrix
+        v_prev
     end
     
     methods
         function obj = Controller(H)
+            disp('Initializing controller...');
+            
             % Horizon
             obj.H = H;
             
             % Load reference trajectory
             S = load('reference.mat', 'reference');
+            S.reference.S = S.reference.S(:,1:3);
             obj.reference = S.reference;
             
             stateLength = size(obj.reference.S,2);
@@ -36,6 +47,11 @@ classdef Controller < handle
             S = load('Map.mat', 'Map');
             obj.Map = S.Map;
             
+            % Load Acceleration-model
+            addpath('../Acceleration-Model', '../Yaw-Rate-Estimation');
+            S = load('AccelerationLaggedModel.mat', 'model');
+            obj.model = S.model;
+            
             % Initialization
             obj.t = 0;
             obj.episode = 1;
@@ -43,36 +59,39 @@ classdef Controller < handle
             obj.previousAction(end) = 1;
             obj.previousState = zeros(stateLength,1);
             obj.state = zeros(stateLength,1);
-            obj.alpha = 0.99; 
+            obj.alpha = 0.0001; 
+            obj.rangeFinderIndices = (1:19) + 49;
+            obj.angles = transp(((obj.rangeFinderIndices - 10) / 9) * (0.5*pi) * -1);
+            obj.options = optimset('LargeScale', 'off', 'TolX', 0.0001, 'Display', 'off');
+            obj.v_prev = zeros(actionLength,1);
             
             % Compute first time-varying policy
-            [K,P] = computePolicy(obj.reference.S, obj.reference.U, obj.reference.T, obj.Map, obj.alpha);
-            obj.K = K;
-            obj.P = P;
+            [obj.A, obj.B, obj.Q, obj.R] = approximateLQR(obj.reference.S(1:H,:), obj.reference.U(1:H-1,:), obj.reference.T(1:H,:), obj.Map, obj.alpha, obj.model);
+            [obj.K, obj.P] = createTimeVaryingController(obj.A, obj.B, obj.Q, obj.R, obj.Q{H});
             
             obj.history.S = zeros(obj.H, stateLength);
             obj.history.U = zeros(obj.H, actionLength);
+            obj.history.T = zeros(obj.H, 1);
             
-            % Load Acceleration-model
-            addpath('../Acceleration-Model', '../Yaw-Rate-Estimation');
-            S = load('AccelerationLaggedModel.mat', 'model');
-            obj.model = S.model;
+            disp('Controller ready...');
         end
         
-        function u = control(this, message)  
-            %tic
-            
+        function action = control(this, message)
             % Read all sensor values
             this.previousSensors = this.sensors;
             
-            this.parse(message);
+            if ischar(message)
+                this.parse(message);
+            else
+                this.sensors = message;
+            end
+            
             this.previousState = this.state;
             
             % If start sign is not given yet
             if this.sensors(2) < 0
-                this.state = [this.sensors([47 48]); 0; this.sensors([4 69 1]); 1; this.previousState(1:7)];%; this.previousAction];
-                u = [0 0 0 1]';
-                %toc
+                this.state = [this.sensors([47 48]); 0];%; this.sensors([4 69 1]); 1; this.previousState(1:7)];%; this.previousAction];
+                action = [0 0 0]';
                 return;
             end
             
@@ -87,18 +106,17 @@ classdef Controller < handle
             
             if this.t == this.H
                 % Output does not matter, because trial has ended
-                u = [0 0 0 1]';
-                %toc
+                action = [0 0 0]';
                 return;
             end
-            
-            %disp(this.t);
             
             % Policy for current timestep is already known, compute change
             % in control inputs
             % change = this.K{this.t} * this.state;
             % action = this.previousAction + change;
-            v = this.K{this.t} * (this.state - this.reference.S(this.t,:)');
+            z = [this.state - this.reference.S(this.t,:)'; 1; this.v_prev; 1];
+            dv = this.K{this.t} * z;
+            v = this.v_prev + dv;
             u = v + this.reference.U(this.t,:)';
             
             %u
@@ -107,15 +125,14 @@ classdef Controller < handle
             
             % Check if accelerating or braking
             if u(1) > 0
-                u = [u(1); 0; u(2:3)];
+                action = [u(1); 0; u(2)];
             else
-                u = [0; u];
+                action = [0; -1 * u(1); u(2)];
             end
             
             % For next iteration
-            this.previousAction = u;
-            
-            %toc
+            % this.previousAction = u;
+            this.v_prev = v;
         end
         
         function reset(this)
@@ -123,10 +140,9 @@ classdef Controller < handle
             
             this.alpha = this.alpha - 0.09;
             
-            % Compute and solve new optimal control problem
-            [K, P] = computePolicy(this.history.S, this.history.U, this.history.T, this.Map, this.alpha);
-            this.K = K;
-            this.P = P;
+            % Compute and solve new optimal control problem           
+            [this.A, this.B, this.Q, this.R] = approximateLQR(this.history.S(1:this.H,:), this.history.U(1:this.H-1,:), this.history.T(1:this.H,:), this.Map, this.alpha, this.model);
+            [this.K, this.P] = createTimeVaryingController(this.A, this.B, this.Q, this.R, this.Q{this.H});
             
             % Compute total costs
             cost = 0;
@@ -141,9 +157,9 @@ classdef Controller < handle
             this.reference = this.history;
             
             % Reset history and counter
-            this.history.S = zeros(this.H, 14);
-            this.history.U = zeros(this.H, 3);
-            this.history.T = zeros(this.H, 1);
+            this.history.S = zeros(size(this.history.S));
+            this.history.U = zeros(size(this.history.U));
+            this.history.T = zeros(size(this.history.T));
             this.t = 0;
             this.episode = this.episode + 1;
         end
@@ -159,21 +175,21 @@ classdef Controller < handle
         function computeState(this)
             s = zeros(size(this.previousState));
             
-            % Forward and lateral speed
-            s(1:2) = this.sensors(47:48);
+            % Forward and lateral speed in m/s
+            s(1:2) = this.sensors(47:48) * 1000 / 3600;
             
-            % Angular velocity
+            % Angular velocity in rad/s
             s(3) = this.estimateYawRate();
-            
-            % State features
-            s(4:6) = this.sensors([4 69 1]);
-            
-            % And remaining elements
-            s(7) = 1;
-            s(8:14) = this.previousState(1:7);
-            
-            % Also previous action in state
-            %s(15:17) = this.previousAction;
+
+%             % State features
+%             s(4:6) = this.sensors([4 69 1]);
+%             
+%             % And remaining elements
+%             s(7) = 1;
+%             s(8:14) = this.previousState(1:7);
+%             
+%             % Also previous action in state
+%             %s(15:17) = this.previousAction;
             
             this.state = s;
         end
@@ -190,57 +206,30 @@ classdef Controller < handle
             % Current guess
             yawRate = 0;%this.previousState(3);
             
-            epsilon = 0.00001;
-            
-            % Compute marks at time t-1
-            indices = 1:19;
-            angles = transp(((indices - 10) / 9) * (0.5*pi) * -1);
-            ranges = this.previousSensors(indices + 49);
-            marks = [ranges .* cos(angles) ranges .* sin(angles)];
+            % Compute marks at time t-1 for the reference scan
+            ranges = this.previousSensors(this.rangeFinderIndices);
+            marks = [ranges .* cos(this.angles) ranges .* sin(this.angles)];
             
             try
                 [marksLeft, marksRight] = groupRangeFinders(marks, 10);
 
                 % Compute move in body coordinate frame
-                move = this.previousState(1:2)' .* dt;
+                move = (this.previousState(1:2)' + this.state(1:2)') .* 0.5 .* dt;
 
-                % Compute marks at time t
-                newRanges = this.sensors(indices + 49);
-                newMarks = [newRanges .* cos(angles) newRanges .* sin(angles)];
+                % Compute marks at time t for the current scan
+                newRanges = this.sensors(this.rangeFinderIndices);
+                newMarks = [newRanges .* cos(this.angles) newRanges .* sin(this.angles)];
                 [newMarksLeft, newMarksRight] = groupRangeFinders(newMarks, 10);
 
-                yawRate = fminsearch(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), yawRate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
+                yawRate = fminsearch(@(x) computeProjectionError(marksLeft, marksRight, move, newMarksLeft, newMarksRight, x), yawRate, this.options);
 
                 yawRate = yawRate * alpha;
                 
                 % Now we have a better estimate for the yawrate at time t-1
-                this.previousState(3) = yawRate / dt;
+                yawRate = yawRate / dt;
             catch e
                 disp('Error in yaw rate estimation');
             end
-            
-            
-            % Use our acceleration model for a prediction for time t
-            % Predict acceleration at time t+tau
-            s = this.previousState(1:3);
-            
-            % a is action at time t-1 converted to other format
-            a = this.previousAction;
-            a(a > 1) = 1;
-            a(a < -1) = -1;
-            
-            acc = zeros(3,1);
-            acc(1:2) = this.model.Apos * mapStates(s')' + this.model.Bpos * mapInputs(a', s')';
-            acc(3) = this.model.Arot * mapStates(s')' + this.model.Brot * mapInputs(a', s')';
-                
-            % Compute predicted state at time t with predicted accelerations
-            angle = s(3) * dt;
-            R = [cos(angle) -sin(angle); sin(angle) cos(angle)];
-            s_new(1:2) = R * (s(1:2) + acc(1:2) * dt);
-            s_new(3) = s(3) + acc(3) * dt;
-            
-            % Now we have a prediction for the current yaw rate
-            yawRate = s_new(3);
         end
     end
     

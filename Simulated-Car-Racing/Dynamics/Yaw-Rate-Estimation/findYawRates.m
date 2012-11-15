@@ -1,6 +1,6 @@
 function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
-%FINDYAWRATE Summary of this function goes here
-%   Detailed explanation goes here
+%FINDYAWRATE Estimates yaw rates via scan matching.
+%   Scans at time t-1 and t are needed to estimate yawrate at time t
     
     % Compensation parameter 
     alpha = 0.805;
@@ -8,7 +8,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
     S(:,1) = States(:,47) * 1000 / 3600;
     S(:,2) = States(:,48) * 1000 / 3600;
     yawRates = zeros(size(S,1),1);
-    
+   
     LeftEdge = zeros(size(S,1)*19,2);
     RightEdge = zeros(size(S,1)*19,2);
     Positions = zeros(0,2);
@@ -28,6 +28,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
     Points = [ranges .* cos(angles) ranges .* sin(angles)];
     [PointsLeft, PointsRight] = groupRangeFinders(Points, 10);
     yawrate = 0;
+    options = optimset('LargeScale', 'off', 'TolX', 0.0001, 'Display', 'off');
     for t = 1:size(States,1)-1
         fprintf('t = %0.3f\n', times(t));
         
@@ -53,12 +54,12 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
             % Localization
             % Search for right yawrate
             yawrate = 0;%0.0145
-            delta = 0.001;
-
-            epsilon = 0.00001;
+%             delta = 0.001;
+% 
+%             epsilon = 0.00001;
             
             %yawrate = fminunc(@(x) computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, x), yawrate, optimset('LargeScale', 'off', 'TolX', epsilon, 'Display', 'off'));
-            yawrate = fminsearch(@(x) computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, x), yawrate);
+            yawrate = fminsearch(@(x) computeProjectionError(LandmarksLeft, LandmarksRight, move, PointsLeft, PointsRight, x), yawrate, options);
 
 
             %yawrate = yawrate * alpha;
@@ -73,7 +74,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = findYawRates(States)
 %         
         
         
-        yawRates(t) = (yawrate * alpha) / dt;
+        yawRates(t+1) = (yawrate * alpha) / dt;
         
 %         R = [cos(yaw) -sin(yaw); sin(yaw) cos(yaw)];
 %         

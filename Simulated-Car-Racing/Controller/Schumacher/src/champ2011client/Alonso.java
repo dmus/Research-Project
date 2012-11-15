@@ -15,16 +15,31 @@ import matlabcontrol.extensions.MatlabTypeConverter;
 
 public class Alonso extends Controller {
 
+	/**
+	 * Proxy to communicate with Matlab controller
+	 */
 	private MatlabProxy proxy;
+	
+	/**
+	 * Current timestep in current episode
+	 */
 	private int t = 0;
+	
+	/**
+	 * Current episode
+	 */
 	private int trial = 1;
-	private int H = 100;
+	
+	/**
+	 * Number of timesteps per episode
+	 */
+	private int H = 30;
 	
 	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
 	
 	public Alonso() throws MatlabConnectionException, MatlabInvocationException {
-		System.out.println("Starting MATLAB proxy");
+		System.out.println("Starting Matlab proxy");
 		File location = new File("D:/Gebruikers/Derk/Mijn documenten/Studie/Research Project/Research-Project/Simulated-Car-Racing/Dynamics/DDP");
 		
 		// Starting a MATLAB proxy
@@ -39,9 +54,12 @@ public class Alonso extends Controller {
 
 		// Initialize new controller
 	    proxy.eval("driver = Controller(" + H + ");");
+	    System.out.println("Matlab proxy started");
 	}
 
     public Action control(SensorModel sensorModel) {
+    	long startTime = System.nanoTime();    
+    	
     	Action action = new Action();
 
     	if (sensorModel.getCurrentLapTime() >= 0)
@@ -75,7 +93,9 @@ public class Alonso extends Controller {
 			System.out.println("Error in MATLAB script.");
 			action.restartRace = true;
 		}
-
+    	
+    	long estimatedTime = System.nanoTime() - startTime;
+    	//System.out.println(t + " > Time elapsed: " + estimatedTime / Math.pow(10, 6));
         return action;
     }
 

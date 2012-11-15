@@ -65,7 +65,7 @@ function [yawRates, LeftEdge, RightEdge, Positions] = splineMethod(States)
             yawrate = 0; % No better estimation available
         end
 
-        yawRates(t-1) = (yawrate * alpha) / dt;
+        yawRates(t) = (yawrate * alpha) / dt;
     end
 end
 

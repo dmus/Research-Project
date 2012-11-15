@@ -19,9 +19,9 @@ times = computeDiscretizedTimes(States);
 
 % Compute longitudinal and lateral speeds in m/s, angular speed in
 % rad/s
-% S(:,1) = States(:,47) * 1000 / 3600;
-% S(:,2) = States(:,48) * 1000 / 3600;
-% S(:,3) = findYawRates(States);
+S(:,1) = States(:,47) * 1000 / 3600;
+S(:,2) = States(:,48) * 1000 / 3600;
+S(:,3) = splineMethod(States);
 
 % S = [S(:,1:3) zeros(size(S,1),3)];
 % for t = 2:size(S,1)
@@ -45,7 +45,7 @@ times = computeDiscretizedTimes(States);
 % % Controls, acceleration, braking and an additional 1
 speedControl = Actions(:,1) + -1 * Actions(:,2);
 U = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
-load('trainingsdata.mat');
+% load('trainingsdata.mat');
 %model = buildAccelerationOneStep(S, U, times);
 models = buildAccelerationLagged(S, U, times, H);
 model = models{length(models)};
@@ -59,9 +59,9 @@ Actions = T.Actions(T.States(:,2) >= 0,:);
 % Compute time differences
 times = computeDiscretizedTimes(States);
 
-% S_test(:,1) = States(:,47) * 1000 / 3600;
-% S_test(:,2) = States(:,48) * 1000 / 3600;
-% S_test(:,3) = findYawRates(States);
+S_test(:,1) = States(:,47) * 1000 / 3600;
+S_test(:,2) = States(:,48) * 1000 / 3600;
+S_test(:,3) = splineMethod(States);
 
 % S_test = [S_test(:,1:3) zeros(size(S_test,1),3)];
 % for t = 2:size(S_test,1)
@@ -84,6 +84,6 @@ times = computeDiscretizedTimes(States);
 
 speedControl = Actions(:,1) + -1 * Actions(:,2);
 U_test = [speedControl Actions(:, 5) ones(size(Actions,1),1)];
-load('testdata.mat');
+% load('testdata.mat');
 
 error = testPerformance(model, H, S_test, U_test, times);

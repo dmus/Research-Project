@@ -18,7 +18,7 @@ public class MessageBasedSensorModel implements SensorModel {
     public MessageBasedSensorModel (String strMessage) {
         this.message = new MessageParser(strMessage);
     }
-
+    
     public double getSpeed() {
         return (Double) message.getReading("speedX");
     }
@@ -87,11 +87,11 @@ public class MessageBasedSensorModel implements SensorModel {
     public double[] getWheelSpinVelocity() {
         return (double[]) message.getReading("wheelSpinVel");
     }
-
+	
 	public String getMessage() {
 		return message.getMessage();
 	}
-
+	
 	public double getZ() {
 		return (Double) message.getReading("z"); 
 	}
@@ -99,5 +99,5 @@ public class MessageBasedSensorModel implements SensorModel {
 	public double getZSpeed() {
 		return (Double) message.getReading("speedZ");
 	}
-
+	
 }

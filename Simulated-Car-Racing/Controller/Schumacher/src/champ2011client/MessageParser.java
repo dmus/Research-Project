@@ -1,8 +1,9 @@
 package champ2011client;
 
-import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.StringTokenizer;
+
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,6 +20,7 @@ public class MessageParser {
     
     public MessageParser(String message) {
     	this.message = message;
+    	
         //System.out.println(message);
         StringTokenizer mt = new StringTokenizer(message, "(");
         while (mt.hasMoreElements()) {
@@ -71,8 +73,9 @@ public class MessageParser {
                 table.put(readingName, readingValue);
             }
         }
+        
     }
-
+    
     public void printAll() {
         Enumeration<String> keys = table.keys();
         while (keys.hasMoreElements()) {
@@ -85,7 +88,7 @@ public class MessageParser {
     public Object getReading(String key) {
         return table.get(key);
     }
-
+	
 	public String getMessage() {
 		return message;
 	}

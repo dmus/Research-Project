@@ -13,6 +13,20 @@ function [K, P] = createTimeVaryingController(A, B, Q, R, Qfinal)
 % K{k}, k=1,2,...,T : feedback control for k time steps to-go if in state x equals K{k}*x
 % P{k}, k=1,2,...,T : cost-to-go for k time steps to-go if in state x equals x'*P{k}*x
 
+for t = 1:length(R)
+    if sum(eig(Q{t}) < 0) 
+        warning('Not positive semi-definite Q matrix at time %d\n', t);
+    end
+    
+    if sum(eig(R{t}) < 0) 
+        warning('Not positive semi-definite R matrix at time %d\n', t);
+    end
+end
+
+if sum(eig(Qfinal) < 0) 
+    warning('Qfinal not positive semi-definite\n');
+end
+
 P_current = Qfinal;
 t = length(A);
 for k = 1:length(A)
@@ -22,9 +36,10 @@ for k = 1:length(A)
     K_current = K_new;
     P_current = P_new;
     
-    K{k} = K_current;
-    P{k} = P_current;
+    K{t} = K_current;
+    P{t} = P_current;
     
     t = t-1;
 end
 
+P{k+1} = Qfinal;

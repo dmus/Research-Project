@@ -1,10 +1,13 @@
-function Laps = extractLaps(filename)
-%EXTRACTLAP Laps extracted (information before finish
-%line is passed as separate lap)
-%   Detailed explanation goes here
+function [Laps, start] = extractLaps(filename)
+%EXTRACTLAP Laps extracted (information between start signal and first finish
+%line passing is handled as separate lap)
+%   Optional argument start returns the index of first sensor information
+%   after start signal.
     Log = load(filename);
     
     % Remove states and actions before start signal
+    start = find(Log.States(:,2) > 0, 1);
+    
     States = Log.States(Log.States(:,2) > 0,:);
     Actions = Log.Actions(Log.States(:,2) > 0,:);
 
