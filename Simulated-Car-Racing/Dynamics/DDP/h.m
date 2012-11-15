@@ -3,6 +3,6 @@ function cost = h(u)
 %   Detailed explanation goes here
     %cost = sum(0.01 * u).^2;
     %cost = (u' * u) * 0.01;
-    cost = (u(1:2)' * u(1:2));
+    cost = (1 - u(1)) .* 2 + (-0.5 - u(2)) .^ 2;
 end
 

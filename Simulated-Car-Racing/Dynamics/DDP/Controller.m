@@ -59,7 +59,7 @@ classdef Controller < handle
             obj.previousAction(end) = 1;
             obj.previousState = zeros(stateLength,1);
             obj.state = zeros(stateLength,1);
-            obj.alpha = 0.0001; 
+            obj.alpha = 0.9; 
             obj.rangeFinderIndices = (1:19) + 49;
             obj.angles = transp(((obj.rangeFinderIndices - 10) / 9) * (0.5*pi) * -1);
             obj.options = optimset('LargeScale', 'off', 'TolX', 0.0001, 'Display', 'off');
@@ -138,7 +138,7 @@ classdef Controller < handle
         function reset(this)
             disp('resetting...');
             
-            this.alpha = this.alpha - 0.09;
+            this.alpha = this.alpha - 0.1;
             
             % Compute and solve new optimal control problem           
             [this.A, this.B, this.Q, this.R] = approximateLQR(this.history.S(1:this.H,:), this.history.U(1:this.H-1,:), this.history.T(1:this.H,:), this.Map, this.alpha, this.model);
