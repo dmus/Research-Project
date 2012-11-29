@@ -22,8 +22,7 @@ function cost = g(s)
 %     %cost = distance^2;
 %     
 %     %cost = trackLength - s(4);
-%     target = 5;
-    cost = s(1)^2 + s(2)^2 + s(3)^2;
-    cost = 0;
+    target = 1.3889; % 5 km/h
+    cost = 1 * (target - s(1))^2 + 1 * s(3)^2;
 end
 

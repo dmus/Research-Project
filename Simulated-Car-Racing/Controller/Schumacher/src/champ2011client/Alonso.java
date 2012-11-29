@@ -33,7 +33,7 @@ public class Alonso extends Controller {
 	/**
 	 * Number of timesteps per episode
 	 */
-	private int H = 30;
+	private int H = 10;
 	
 	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
@@ -72,7 +72,7 @@ public class Alonso extends Controller {
     	try {
     		// Proxy sensor values in message string to MATLAB object
     		proxy.setVariable("message", sensorModel.getMessage());
-    		proxy.eval("a = driver.control(message);");
+    		proxy.eval("a = driver.controlFromMessage(message);");
     		
     		if (t == H) {
     			System.out.println("Restart requested...");

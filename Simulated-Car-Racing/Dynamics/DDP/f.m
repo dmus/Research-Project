@@ -1,5 +1,5 @@
 function s_next = f(s, u, dt, Map, model)
-%F Summary of this function goes here
+%F Predicts next state.
 %   Detailed explanation goes here
     s_next = s;
     

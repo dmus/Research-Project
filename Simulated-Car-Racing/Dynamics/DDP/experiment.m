@@ -1,3 +1,5 @@
+% Map building experiment
+
 Map = buildMap(S,Laps{2}.S);
 speedControl = Laps{2}.A(:,1) + -1 * Laps{2}.A(:,2);
 U = [speedControl Laps{2}.A(:, 5) ones(size(Laps{2}.A,1),1)];

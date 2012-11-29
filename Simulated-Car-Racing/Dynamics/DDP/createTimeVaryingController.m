@@ -15,16 +15,16 @@ function [K, P] = createTimeVaryingController(A, B, Q, R, Qfinal)
 
 for t = 1:length(R)
     if sum(eig(Q{t}) < 0) 
-        warning('Not positive semi-definite Q matrix at time %d\n', t);
+        warning('Not positive semi-definite Q matrix at time %d', t);
     end
     
     if sum(eig(R{t}) < 0) 
-        warning('Not positive semi-definite R matrix at time %d\n', t);
+        warning('Not positive semi-definite R matrix at time %d', t);
     end
 end
 
 if sum(eig(Qfinal) < 0) 
-    warning('Qfinal not positive semi-definite\n');
+    warning('Qfinal not positive semi-definite');
 end
 
 P_current = Qfinal;

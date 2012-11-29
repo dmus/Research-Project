@@ -1,4 +1,4 @@
-function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model)
+function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model, bias)
 %COMPUTEPOLICY Approximate a standard linear-time varying LQR problem.
 %   Dynamics and cost matrices are approximated with Taylor expansions.
     
@@ -12,7 +12,6 @@ function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model)
     my_eps = 0.01;
     
     for t = 1:H-1
-        % Add state features
         s_ref = S(t,:)';
         s_ref_tplus1 = S(t+1,:)';
         
@@ -21,7 +20,8 @@ function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model)
         dt = times(t+1) - times(t);
 
         % Linearize dynamics around reference trajectory
-        [A{t}, B{t}, c{t}] = linearizeDynamics(@f, s_ref, u_ref, dt, my_eps, s_ref_tplus1, Map, model);
+        f_t = @(s_ref, u_ref, dt, Map, model) f(s_ref, u_ref, dt, Map, model) + bias(t,:)';
+        [A{t}, B{t}, c{t}] = linearizeDynamics(f_t, s_ref, u_ref, dt, my_eps, s_ref_tplus1, Map, model);
         
         % Transform affine system into standard LQR format
         A{t} = [A{t} c{t}; zeros(1, n_states) 1];
@@ -30,11 +30,11 @@ function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model)
         B{t} = Temp;
         
         % Approximate costs in quadratic form around reference trajectory
-        [Q{t}, R{t}] = quadraticizeCosts(@g, @h, s_ref(1:3), u_ref(1:2), my_eps);
+        [Q{t}, R{t}] = quadraticizeCosts(@g, @h, s_ref, u_ref, my_eps);
         
         % Penalize deviations from reference trajectory
-        Q{t} = (1 - alpha) * Q{t} + alpha * [eye(3) zeros(3,1); zeros(1,3 + 1)];
-        R{t} = (1 - alpha) * R{t} + alpha * [eye(2) zeros(2,1); zeros(1,2 + 1)];
+        Q{t} = (1 - alpha) * Q{t} + alpha * [eye(n_states) zeros(n_states,1); zeros(1,n_states + 1)];
+        R{t} = (1 - alpha) * R{t} + alpha * [eye(n_inputs) zeros(n_inputs,1); zeros(1,n_inputs + 1)];
         
         Aprime{t} = [A{t} B{t};
                      zeros(n_inputs+1,n_states+1) eye(n_inputs+1)];
@@ -51,7 +51,7 @@ function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model)
         end
         
         % Matrix to penalize change in control inputs
-        Rprime{t} = zeros(2);
+        Rprime{t} = 0 * eye(2);
                  
         % Extend matrices to be able to store previous state in current
         % state (and penalize for change in control inputs)
@@ -66,8 +66,8 @@ function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model)
 %         Rprime{t} = R{t};%0.1 * eye(length(u_ref) + 1);
     end
 
-    Q{H} = quadraticizeCosts(@g, [], S(H,1:3)', [], my_eps);
-    Q{H} = (1 - alpha) * Q{H} + alpha * [eye(3) zeros(3,1); zeros(1, 3 + 1)];
+    Q{H} = quadraticizeCosts(@g, [], S(H,:)', [], my_eps);
+    Q{H} = (1 - alpha) * Q{H} + alpha * [eye(n_states) zeros(n_states,1); zeros(1, n_states + 1)];
     
     Qprime{H} = [Q{H} zeros(n_states+1, n_inputs+1);
                  zeros(n_inputs+1, n_states+1) R{H-1}];
