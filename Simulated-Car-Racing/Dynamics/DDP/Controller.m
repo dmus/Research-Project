@@ -7,7 +7,7 @@ classdef Controller < handle
         sensors             % Current raw sensor readings
         sensors_prev        % Sensor readings at time t-1
         state               % Current full state
-        state_prev       % Full state at time t-1
+        state_prev          % Full state at time t-1
         K                   % Optimal time-varying policy
         P                   % Time-varying cost-to-go function
         model               % Acceleration-model for prediction of next state
@@ -65,7 +65,7 @@ classdef Controller < handle
             obj.rangeFinderIndices = (1:19) + 49;
             obj.angles = transp(((obj.rangeFinderIndices - 10) / 9) * (0.5*pi) * -1);
             obj.options = optimset('LargeScale', 'off', 'TolX', 0.0001, 'Display', 'off');
-            obj.use_bias = true;
+            obj.use_bias = false;
             
             obj.onStart();
             
@@ -105,7 +105,7 @@ classdef Controller < handle
         % readings
         function action = controlFromMessage(this, message)
             sensors = this.parse(message);
-            u = this.control(sensors);
+            u = this.controlFromSensors(sensors);
             
             % Check if accelerating or braking
             if u(1) > 0

@@ -36,6 +36,7 @@ function [A,B,Q,R] = approximateLQR(S, U, times, Map, alpha, model, bias)
         Q{t} = (1 - alpha) * Q{t} + alpha * [eye(n_states) zeros(n_states,1); zeros(1,n_states + 1)];
         R{t} = (1 - alpha) * R{t} + alpha * [eye(n_inputs) zeros(n_inputs,1); zeros(1,n_inputs + 1)];
         
+        % Augment matrices
         Aprime{t} = [A{t} B{t};
                      zeros(n_inputs+1,n_states+1) eye(n_inputs+1)];
                  

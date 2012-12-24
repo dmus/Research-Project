@@ -33,7 +33,7 @@ public class Alonso extends Controller {
 	/**
 	 * Number of timesteps per episode
 	 */
-	private int H = 10;
+	private int H = 100;
 	
 	protected StandardGearChangeBehaviour gearBehaviour = new StandardGearChangeBehaviour();
     protected ClutchBehaviour clutchBehaviour = new ClutchBehaviour();
